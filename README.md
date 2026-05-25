@@ -8,7 +8,7 @@
 node server.js
 ```
 
-打开 http://localhost:3000。
+打开 http://localhost:2458。
 
 ## 功能
 

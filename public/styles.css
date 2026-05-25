@@ -1205,6 +1205,17 @@ input:focus {
   font-weight: 800;
 }
 
+.record-detail-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.record-detail-actions button {
+  margin-top: 0;
+}
+
 .confirm-icon {
   display: inline-grid;
   place-items: center;

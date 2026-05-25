@@ -28,6 +28,7 @@ let currentPage = "home";
 let previousPageBeforeCheckin = "home";
 let editingRecordId = null;
 let pendingDeleteRecordId = null;
+let detailRecordId = null;
 let avatarEditorImage = null;
 let avatarCropX = 130;
 let avatarCropY = 130;
@@ -203,6 +204,7 @@ function closeDeleteModal() {
 }
 
 function closeRecordDetail() {
+  detailRecordId = null;
   $("#recordDetailModal").classList.add("hidden");
 }
 
@@ -443,15 +445,31 @@ function findRecordById(recordId, ownerName = "") {
   return source.find((item) => item.id === recordId);
 }
 
+function startRecordEdit(record) {
+  if (!record) return;
+  recordDate.value = record.date;
+  const form = $("#recordForm");
+  form.elements.weight.value = inputWeightFromKg(record.weight);
+  syncWeightRangeFromInput();
+  form.elements.note.value = record.note || "";
+  editingRecordId = record.id;
+  $("#saveRecordBtn").textContent = "保存修改";
+  recordMessage.textContent = "正在编辑已有记录，保存后会覆盖当天数据。";
+  closeOpenSwipeRecords();
+  switchPage("checkin");
+}
+
 function openRecordDetail(record, ownerName = "") {
   if (!record) return;
   const note = [record.mood, record.note].filter(Boolean).join(" · ");
+  detailRecordId = ownerName ? null : record.id;
   $("#detailDate").textContent = record.date || "--";
   $("#detailTime").textContent = formatRecordTime(record.createdAt);
   $("#detailWeight").textContent = kg(record.weight);
   $("#detailNote").textContent = note || "暂无备注";
   $("#detailOwner").textContent = ownerName || "";
   $("#detailOwnerRow").classList.toggle("hidden", !ownerName);
+  $("#editRecordDetailBtn").classList.toggle("hidden", Boolean(ownerName));
   $("#recordDetailModal").classList.remove("hidden");
 }
 
@@ -729,16 +747,7 @@ document.addEventListener("click", async (event) => {
   const record = state.records.find((item) => item.id === actionButton.dataset.recordId);
   if (!record) return;
   if (actionButton.dataset.action === "edit-record") {
-    recordDate.value = record.date;
-    const form = $("#recordForm");
-    form.elements.weight.value = inputWeightFromKg(record.weight);
-    syncWeightRangeFromInput();
-    form.elements.note.value = record.note || "";
-    editingRecordId = record.id;
-    $("#saveRecordBtn").textContent = "保存修改";
-    recordMessage.textContent = "正在编辑已有记录，保存后会覆盖当天数据。";
-    closeOpenSwipeRecords();
-    switchPage("checkin");
+    startRecordEdit(record);
   }
   if (actionButton.dataset.action === "delete-record") {
     pendingDeleteRecordId = record.id;
@@ -938,6 +947,11 @@ $("#confirmDeleteBtn").addEventListener("click", async () => {
 });
 
 $("#closeRecordDetailBtn").addEventListener("click", closeRecordDetail);
+$("#editRecordDetailBtn").addEventListener("click", () => {
+  const record = state.records.find((item) => item.id === detailRecordId);
+  closeRecordDetail();
+  startRecordEdit(record);
+});
 $("#recordDetailModal").addEventListener("click", (event) => {
   if (event.target.id === "recordDetailModal") closeRecordDetail();
 });
