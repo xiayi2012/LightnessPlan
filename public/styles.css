@@ -807,7 +807,7 @@ input:focus {
 }
 
 .record-item.actions-open .record-content {
-  transform: translateX(-132px);
+  transform: translateX(-72px);
 }
 
 .record-actions {
@@ -817,7 +817,7 @@ input:focus {
   bottom: 0;
   z-index: 1;
   display: flex;
-  width: 132px;
+  width: 72px;
   border-radius: 0 8px 8px 0;
   overflow: hidden;
 }

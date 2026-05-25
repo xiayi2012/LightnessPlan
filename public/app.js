@@ -426,7 +426,6 @@ function recordCard(record, name = "", editable = false) {
     <article class="record-item${noMetaClass} ${editable ? "swipe-record" : ""}" data-record-id="${escapeHtml(record.id)}" data-record-owner="${escapeHtml(name)}">
       ${editable ? `
         <div class="record-actions">
-          <button type="button" data-action="edit-record" data-record-id="${escapeHtml(record.id)}">编辑</button>
           <button type="button" data-action="delete-record" data-record-id="${escapeHtml(record.id)}">删除</button>
         </div>
       ` : ""}
@@ -782,9 +781,6 @@ document.addEventListener("click", async (event) => {
   closeOpenSwipeRecords(actionButton.closest(".swipe-record"));
   const record = state.records.find((item) => item.id === actionButton.dataset.recordId);
   if (!record) return;
-  if (actionButton.dataset.action === "edit-record") {
-    startRecordEdit(record);
-  }
   if (actionButton.dataset.action === "delete-record") {
     pendingDeleteRecordId = record.id;
     $("#deleteModalText").textContent = `确定删除 ${record.date} 的体重记录吗？删除后不能恢复，但可以重新打卡覆盖当天数据。`;
@@ -819,7 +815,7 @@ document.addEventListener("touchmove", (event) => {
   }
   if (!swipeState.isHorizontal) return;
   event.preventDefault();
-  const offset = Math.max(-132, Math.min(0, swipeState.record.classList.contains("actions-open") ? -132 + dx : dx));
+  const offset = Math.max(-72, Math.min(0, swipeState.record.classList.contains("actions-open") ? -72 + dx : dx));
   swipeState.record.style.setProperty("--swipe-x", `${offset}px`);
 }, { passive: false });
 
@@ -857,7 +853,7 @@ document.addEventListener("pointermove", (event) => {
   }
   if (!pointerSwipeState.isHorizontal) return;
   event.preventDefault();
-  const offset = Math.max(-132, Math.min(0, pointerSwipeState.record.classList.contains("actions-open") ? -132 + dx : dx));
+  const offset = Math.max(-72, Math.min(0, pointerSwipeState.record.classList.contains("actions-open") ? -72 + dx : dx));
   pointerSwipeState.record.style.setProperty("--swipe-x", `${offset}px`);
 }, { passive: false });
 
