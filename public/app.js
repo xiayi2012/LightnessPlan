@@ -495,6 +495,7 @@ function renderLeaderboard() {
       return `
         <article class="rank-item ${item.own ? "own-rank" : ""}">
           <div class="rank-num">${index + 1}</div>
+          ${rankAvatar(item.user)}
           <div>
             <div class="rank-name">${escapeHtml(item.user.name)}</div>
             ${description ? `<div class="rank-meta">${description}</div>` : ""}
@@ -504,6 +505,13 @@ function renderLeaderboard() {
       `;
     }).join("")
     : `<div class="empty">${rankMode === "totalLoss" ? "还没有可排行的体重记录。" : "这个日期还没有可排行的今日减重比例。"}</div>`;
+}
+
+function rankAvatar(user = {}) {
+  if (user.avatar) {
+    return `<div class="rank-avatar"><img src="${escapeHtml(user.avatar)}" alt="${escapeHtml(user.name || "头像")}" /></div>`;
+  }
+  return `<div class="rank-avatar">${escapeHtml(avatarText(user.name))}</div>`;
 }
 
 function renderCompetition() {
