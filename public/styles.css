@@ -820,9 +820,15 @@ input:focus {
 }
 
 .record-weight {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 82px;
+  min-height: 38px;
   white-space: nowrap;
   color: var(--accent);
   font-weight: 900;
+  text-align: center;
 }
 
 .trend-item {

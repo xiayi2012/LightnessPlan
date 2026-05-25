@@ -140,15 +140,8 @@
 
         <section class="app-page" data-page="checkin">
           <form id="recordForm" class="panel record-panel">
-            <div class="panel-heading record-heading">
-              <div class="page-heading">
-                <button id="backFromRecordBtn" class="back-button" type="button" aria-label="返回">‹</button>
-              <h2>体重打卡</h2>
-              </div>
-              <input id="recordDate" name="date" type="date" required />
-            </div>
+            <label>日期<input id="recordDate" name="date" type="date" required /></label>
             <label><span id="recordWeightLabel">体重 kg</span><input id="recordWeightInput" name="weight" type="number" min="20" max="800" step="0.1" required /></label>
-            <input id="recordWeightRange" class="weight-range" type="range" min="20" max="400" step="0.1" value="60" aria-label="滑动选择体重" />
             <label>备注<input name="note" maxlength="120" /></label>
             <div class="record-actions-row">
               <button id="cancelRecordBtn" class="secondary-button" type="button">不保存返回</button>
@@ -188,7 +181,6 @@
           <section class="panel leaderboard-panel">
             <div class="panel-heading">
               <h2>排行榜</h2>
-              <input id="rankDate" type="date" />
             </div>
             <div class="rank-tabs" role="tablist" aria-label="排行榜排序">
               <button class="rank-tab" type="button" data-rank-mode="dailyPercent">今日排行</button>
@@ -260,7 +252,6 @@
             </button>
           </section>
 
-          <button id="seedBtn" class="seed-button" type="button">生成模拟数据</button>
           <button id="logoutBtn" class="logout-button" type="button">注销登录</button>
         </section>
 
@@ -331,6 +322,10 @@
             <div>
               <span>日期</span>
               <strong id="detailDate">--</strong>
+            </div>
+            <div>
+              <span>记录时间</span>
+              <strong id="detailTime">--</strong>
             </div>
             <div>
               <span>体重</span>

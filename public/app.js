@@ -44,7 +44,7 @@ const pageMeta = {
 };
 
 recordDate.value = today;
-rankDate.value = today;
+if (rankDate) rankDate.value = today;
 
 async function api(path, options = {}) {
   const response = await fetch(path, {
@@ -447,11 +447,25 @@ function openRecordDetail(record, ownerName = "") {
   if (!record) return;
   const note = [record.mood, record.note].filter(Boolean).join(" · ");
   $("#detailDate").textContent = record.date || "--";
+  $("#detailTime").textContent = formatRecordTime(record.createdAt);
   $("#detailWeight").textContent = kg(record.weight);
   $("#detailNote").textContent = note || "暂无备注";
   $("#detailOwner").textContent = ownerName || "";
   $("#detailOwnerRow").classList.toggle("hidden", !ownerName);
   $("#recordDetailModal").classList.remove("hidden");
+}
+
+function formatRecordTime(value) {
+  if (!value) return "--";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "--";
+  return date.toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function renderLeaderboard() {
@@ -648,7 +662,7 @@ async function refreshAll() {
 }
 
 function fetchLeaderboard() {
-  return api(`/api/leaderboard?date=${encodeURIComponent(rankDate.value || today)}&mode=${encodeURIComponent(rankMode)}`);
+  return api(`/api/leaderboard?date=${encodeURIComponent(rankDate?.value || today)}&mode=${encodeURIComponent(rankMode)}`);
 }
 
 document.querySelectorAll("[data-auth-tab]").forEach((button) => {
@@ -677,7 +691,7 @@ document.querySelectorAll("[data-rank-mode]").forEach((button) => {
 });
 
 recordWeightInput.addEventListener("input", syncWeightRangeFromInput);
-recordWeightRange.addEventListener("input", syncWeightInputFromRange);
+recordWeightRange?.addEventListener("input", syncWeightInputFromRange);
 
 document.querySelectorAll("[data-unit]").forEach((button) => {
   button.addEventListener("click", () => {
@@ -847,7 +861,7 @@ $("#recordForm").addEventListener("submit", async (event) => {
     await api("/api/records", { method: "POST", body: JSON.stringify(payload) });
     const wasEditing = Boolean(editingRecordId);
     recordMessage.textContent = wasEditing ? "已修改。" : "已保存，排行榜刷新了。";
-    rankDate.value = recordDate.value;
+    if (rankDate) rankDate.value = recordDate.value;
     resetRecordForm();
     await refreshAll();
     switchPage(wasEditing ? (previousPageBeforeCheckin || "home") : "rank");
@@ -856,10 +870,10 @@ $("#recordForm").addEventListener("submit", async (event) => {
   }
 });
 
-$("#backFromRecordBtn").addEventListener("click", closeRecordPage);
+$("#backFromRecordBtn")?.addEventListener("click", closeRecordPage);
 $("#cancelRecordBtn").addEventListener("click", closeRecordPage);
 
-rankDate.addEventListener("change", async () => {
+rankDate?.addEventListener("change", async () => {
   const data = await fetchLeaderboard();
   state.leaderboard = data.leaderboard;
   state.competition = data.competition;
@@ -887,7 +901,7 @@ $("#logoutBtn").addEventListener("click", async () => {
   renderShell();
 });
 
-$("#seedBtn").addEventListener("click", async () => {
+$("#seedBtn")?.addEventListener("click", async () => {
   await api("/api/dev/seed", { method: "POST", body: "{}" });
   await refreshAll();
   switchPage("stats");
