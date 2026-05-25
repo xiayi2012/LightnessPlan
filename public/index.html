@@ -318,31 +318,23 @@
       <section id="recordDetailModal" class="modal hidden" aria-modal="true" role="dialog">
         <div class="modal-card record-detail-card">
           <h2>记录详情</h2>
-          <div class="detail-list">
-            <div>
-              <span>日期</span>
-              <strong id="detailDate">--</strong>
-            </div>
-            <div>
+          <form id="recordDetailForm" class="detail-form">
+            <label>日期<input id="detailDateInput" name="date" type="date" required /></label>
+            <label><span id="detailWeightLabel">体重 kg</span><input id="detailWeightInput" name="weight" type="number" min="20" max="800" step="0.1" required /></label>
+            <label>备注<input id="detailNoteInput" name="note" maxlength="120" /></label>
+            <div class="detail-readonly">
               <span>记录时间</span>
               <strong id="detailTime">--</strong>
             </div>
-            <div>
-              <span>体重</span>
-              <strong id="detailWeight">--</strong>
-            </div>
-            <div id="detailOwnerRow" class="hidden">
+            <div id="detailOwnerRow" class="detail-readonly hidden">
               <span>成员</span>
               <strong id="detailOwner">--</strong>
             </div>
-            <div>
-              <span>备注</span>
-              <p id="detailNote">暂无备注</p>
-            </div>
-          </div>
+            <p id="detailMessage" class="message"></p>
+          </form>
           <div class="record-detail-actions">
-            <button id="editRecordDetailBtn" class="secondary-button" type="button">修改</button>
-            <button id="closeRecordDetailBtn" class="primary" type="button">知道了</button>
+            <button id="closeRecordDetailBtn" class="secondary-button" type="button">返回</button>
+            <button id="saveRecordDetailBtn" class="primary" type="button">保存</button>
           </div>
         </div>
       </section>

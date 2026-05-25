@@ -205,6 +205,7 @@ function closeDeleteModal() {
 
 function closeRecordDetail() {
   detailRecordId = null;
+  $("#detailMessage").textContent = "";
   $("#recordDetailModal").classList.add("hidden");
 }
 
@@ -461,16 +462,43 @@ function startRecordEdit(record) {
 
 function openRecordDetail(record, ownerName = "") {
   if (!record) return;
-  const note = [record.mood, record.note].filter(Boolean).join(" · ");
   detailRecordId = ownerName ? null : record.id;
-  $("#detailDate").textContent = record.date || "--";
+  const isOwnRecord = !ownerName;
+  $("#detailDateInput").value = record.date || today;
+  $("#detailWeightInput").value = inputWeightFromKg(record.weight);
+  $("#detailNoteInput").value = record.note || "";
   $("#detailTime").textContent = formatRecordTime(record.createdAt);
-  $("#detailWeight").textContent = kg(record.weight);
-  $("#detailNote").textContent = note || "暂无备注";
   $("#detailOwner").textContent = ownerName || "";
   $("#detailOwnerRow").classList.toggle("hidden", !ownerName);
-  $("#editRecordDetailBtn").classList.toggle("hidden", Boolean(ownerName));
+  $("#detailWeightLabel").textContent = state.unit === "jin" ? "体重 斤" : "体重 kg";
+  $("#detailMessage").textContent = ownerName ? "只能查看其他成员记录，不能修改。" : "";
+  ["#detailDateInput", "#detailWeightInput", "#detailNoteInput"].forEach((selector) => {
+    $(selector).disabled = !isOwnRecord;
+  });
+  $("#saveRecordDetailBtn").classList.toggle("hidden", !isOwnRecord);
   $("#recordDetailModal").classList.remove("hidden");
+}
+
+async function saveRecordDetail() {
+  if (!detailRecordId) return;
+  const message = $("#detailMessage");
+  message.textContent = "";
+  const originalRecord = state.records.find((item) => item.id === detailRecordId);
+  try {
+    const payload = {
+      date: $("#detailDateInput").value,
+      weight: inputWeightToKg($("#detailWeightInput").value),
+      note: $("#detailNoteInput").value
+    };
+    await api("/api/records", { method: "POST", body: JSON.stringify(payload) });
+    if (originalRecord && payload.date !== originalRecord.date) {
+      await api(`/api/records/${encodeURIComponent(originalRecord.id)}`, { method: "DELETE" });
+    }
+    closeRecordDetail();
+    await refreshAll();
+  } catch (error) {
+    message.textContent = error.message;
+  }
 }
 
 function formatRecordTime(value) {
@@ -955,10 +983,10 @@ $("#confirmDeleteBtn").addEventListener("click", async () => {
 });
 
 $("#closeRecordDetailBtn").addEventListener("click", closeRecordDetail);
-$("#editRecordDetailBtn").addEventListener("click", () => {
-  const record = state.records.find((item) => item.id === detailRecordId);
-  closeRecordDetail();
-  startRecordEdit(record);
+$("#saveRecordDetailBtn").addEventListener("click", saveRecordDetail);
+$("#recordDetailForm").addEventListener("submit", (event) => {
+  event.preventDefault();
+  saveRecordDetail();
 });
 $("#recordDetailModal").addEventListener("click", (event) => {
   if (event.target.id === "recordDetailModal") closeRecordDetail();
