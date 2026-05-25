@@ -1,0 +1,47 @@
+<view class="page">
+  <view class="topbar">
+    <text class="eyebrow">今日战况</text>
+    <text class="title">轻盈计划</text>
+  </view>
+
+  <view class="hero panel">
+    <text class="muted">{{user.name || '你好'}}，今天继续向目标靠近</text>
+    <text class="hero-weight">{{latestWeight}}</text>
+    <text class="muted">{{progressText}}</text>
+    <view class="progress"><view class="progress-inner" style="width: {{progress}}%"></view></view>
+  </view>
+
+  <view class="grid-2">
+    <view class="stat card"><text class="stat-label">当前体重</text><text class="stat-value">{{latestWeight}}</text></view>
+    <view class="stat card"><text class="stat-label">累计减重</text><text class="stat-value">{{totalLoss}}</text></view>
+    <view class="stat card"><text class="stat-label">目标体重</text><text class="stat-value">{{targetWeight}}</text></view>
+    <view class="stat card"><text class="stat-label">记录天数</text><text class="stat-value">{{stats.totalRecords || 0}} 天</text></view>
+  </view>
+
+  <view class="panel records-panel">
+    <view class="panel-title">体重记录</view>
+    <block wx:if="{{records.length}}">
+      <view
+        class="swipe-record {{openRecordId === item.id ? 'open' : ''}}"
+        wx:for="{{records}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtouchstart="onRecordTouchStart"
+        bindtouchend="onRecordTouchEnd"
+      >
+        <view class="record-actions">
+          <button data-id="{{item.id}}" bindtap="editRecord">编辑</button>
+          <button class="delete" data-id="{{item.id}}" bindtap="confirmDelete">删除</button>
+        </view>
+        <view class="record-content" bindtap="closeActions">
+          <view class="record-main">
+            <view class="record-title">{{item.date}}</view>
+            <view wx:if="{{item.note}}" class="record-meta">{{item.note}}</view>
+          </view>
+          <view class="record-weight">{{item.weightText}}</view>
+        </view>
+      </view>
+    </block>
+    <view wx:else class="empty">今天从第一条记录开始。</view>
+  </view>
+</view>

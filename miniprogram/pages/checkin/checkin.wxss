@@ -1,0 +1,23 @@
+.picker {
+  height: 88rpx;
+  padding: 0 22rpx;
+  border: 1rpx solid #f0ddd3;
+  border-radius: 16rpx;
+  background: #fff;
+  line-height: 88rpx;
+  box-sizing: border-box;
+}
+
+slider {
+  margin: 26rpx 0 0;
+}
+
+.checkin-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 26rpx;
+}
+
+.checkin-actions .button {
+  width: 48.6%;
+}

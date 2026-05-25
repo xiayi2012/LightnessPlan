@@ -1,0 +1,8 @@
+data/
+*.log
+screenshot-home.png
+node_modules/
+miniprogram/project.private.config.json
+.vs/
+.DS_Store
+Thumbs.db

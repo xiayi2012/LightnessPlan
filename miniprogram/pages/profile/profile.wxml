@@ -1,0 +1,41 @@
+<view class="page">
+  <view class="topbar">
+    <text class="eyebrow">个人中心</text>
+    <text class="title">我的</text>
+  </view>
+
+  <view class="profile-card">
+    <button class="profile-avatar" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+      <image wx:if="{{user.avatar}}" src="{{user.avatar}}" mode="aspectFill"></image>
+      <text wx:else>{{avatarText}}</text>
+    </button>
+    <view class="profile-info">
+      <text class="muted">我的账号</text>
+      <view class="profile-name">{{user.name || '--'}}</view>
+      <text class="muted">{{user.account || '--'}}</text>
+    </view>
+    <button class="profile-edit" bindtap="editName">编辑</button>
+  </view>
+
+  <view class="profile-stats">
+    <view class="profile-stat"><text>当前体重</text><view>{{latestWeight}}</view></view>
+    <view class="profile-stat"><text>目标体重</text><view>{{targetWeight}}</view></view>
+    <view class="profile-stat"><text>累计减重</text><view>{{totalLoss}}</view></view>
+    <view class="profile-stat"><text>打卡天数</text><view>{{stats.totalRecords || 0}} 天</view></view>
+  </view>
+
+  <view class="profile-options">
+    <view class="option">
+      <text class="option-label">体重单位</text>
+      <view class="unit">
+        <button class="{{unit === 'kg' ? 'active' : ''}}" data-unit="kg" bindtap="setUnit">kg</button>
+        <button class="{{unit === 'jin' ? 'active' : ''}}" data-unit="jin" bindtap="setUnit">斤</button>
+      </view>
+    </view>
+    <view class="option" bindtap="goCompetition"><text class="option-label">比赛设置</text><text class="option-arrow">›</text></view>
+    <view class="option" bindtap="showRules"><text class="option-label">比赛说明</text><text class="option-arrow">›</text></view>
+  </view>
+
+  <button class="button secondary" bindtap="seed">生成模拟数据</button>
+  <button class="logout" bindtap="logout">注销登录</button>
+</view>

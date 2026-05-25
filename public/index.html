@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#fff8f3" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="轻盈计划" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>轻盈 PK</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section id="authView" class="auth-view">
+        <div class="brand">
+          <p class="eyebrow">减肥记录 · 每日 PK</p>
+          <h1>轻盈 PK</h1>
+          <p>记录体重、同步进度、每天用真实变化和朋友们排个名。</p>
+        </div>
+
+        <div class="auth-panel">
+          <div class="tabs" role="tablist">
+            <button class="tab active" type="button" data-auth-tab="login">登录</button>
+            <button class="tab" type="button" data-auth-tab="register">注册</button>
+          </div>
+
+          <form id="loginForm" class="form active">
+            <label>账号<input name="account" autocomplete="username" required /></label>
+            <label>密码<input name="password" type="password" autocomplete="current-password" required /></label>
+            <button class="primary" type="submit">进入</button>
+          </form>
+
+          <form id="registerForm" class="form">
+            <label>账号<input name="account" autocomplete="username" placeholder="英文/数字，至少 3 位" required /></label>
+            <label>昵称<input name="name" maxlength="24" required /></label>
+            <label>密码<input name="password" type="password" autocomplete="new-password" minlength="6" required /></label>
+            <div class="field-grid">
+              <label>初始体重 kg<input name="startWeight" type="number" min="20" max="400" step="0.1" required /></label>
+              <label>目标体重 kg<input name="targetWeight" type="number" min="20" max="400" step="0.1" required /></label>
+            </div>
+            <button class="primary" type="submit">创建账号</button>
+          </form>
+          <p id="authMessage" class="message"></p>
+        </div>
+      </section>
+
+      <section id="dashboardView" class="mobile-app hidden">
+        <header class="app-header">
+          <div>
+            <p class="eyebrow" id="pageEyebrow">今日战况</p>
+            <h1 id="pageTitle">轻盈计划</h1>
+          </div>
+        </header>
+
+        <section class="app-page active" data-page="home">
+          <section class="hero-card">
+            <p id="helloTitle">你好</p>
+            <strong id="homeLatestWeight">--</strong>
+            <span id="homeProgressText">距离目标还有 --</span>
+            <div class="progress-track"><div id="goalProgress" class="progress-fill"></div></div>
+          </section>
+
+          <section class="stats-grid" aria-label="个人概览">
+            <article class="stat">
+              <span>当前体重</span>
+              <strong id="latestWeight">--</strong>
+            </article>
+            <article class="stat">
+              <span>累计减重</span>
+              <strong id="totalLoss">--</strong>
+            </article>
+            <article class="stat">
+              <span>目标体重</span>
+              <strong id="targetWeight">--</strong>
+            </article>
+            <article class="stat">
+              <span>记录天数</span>
+              <strong id="recordDays">--</strong>
+            </article>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>体重记录</h2>
+            </div>
+            <div id="homeRecentRecords" class="record-list"></div>
+          </section>
+        </section>
+
+        <section class="app-page" data-page="stats">
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>数据统计</h2>
+            </div>
+            <div class="insight-grid">
+              <article>
+                <span>起始体重</span>
+                <strong id="firstWeight">--</strong>
+              </article>
+              <article>
+                <span>距目标</span>
+                <strong id="distanceToGoal">--</strong>
+              </article>
+              <article>
+                <span>平均变化</span>
+                <strong id="avgChange">--</strong>
+              </article>
+              <article>
+                <span>最佳单日</span>
+                <strong id="bestDay">--</strong>
+              </article>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>体重趋势</h2>
+            </div>
+            <div class="chart-tabs" aria-label="图表">
+              <section>
+                <h3>折线图</h3>
+                <div id="lineChart" class="chart-box"></div>
+              </section>
+              <section>
+                <h3>柱状图</h3>
+                <div id="barChart" class="chart-box"></div>
+              </section>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>全部体重记录</h2>
+            </div>
+            <div id="statsAllRecords" class="record-list"></div>
+          </section>
+        </section>
+
+        <section class="app-page" data-page="checkin">
+          <form id="recordForm" class="panel record-panel">
+            <div class="panel-heading record-heading">
+              <div class="page-heading">
+                <button id="backFromRecordBtn" class="back-button" type="button" aria-label="返回">‹</button>
+              <h2>体重打卡</h2>
+              </div>
+              <input id="recordDate" name="date" type="date" required />
+            </div>
+            <label><span id="recordWeightLabel">体重 kg</span><input id="recordWeightInput" name="weight" type="number" min="20" max="800" step="0.1" required /></label>
+            <input id="recordWeightRange" class="weight-range" type="range" min="20" max="400" step="0.1" value="60" aria-label="滑动选择体重" />
+            <label>备注<input name="note" maxlength="120" /></label>
+            <div class="record-actions-row">
+              <button id="cancelRecordBtn" class="secondary-button" type="button">不保存返回</button>
+              <button id="saveRecordBtn" class="primary" type="submit">保存打卡</button>
+            </div>
+            <p id="recordMessage" class="message"></p>
+          </form>
+        </section>
+
+        <section class="app-page" data-page="rank">
+          <section class="race-card">
+            <div>
+              <span id="raceStatus">比赛状态</span>
+              <strong id="raceTitle">赛况</strong>
+              <p id="raceDateRange">--</p>
+            </div>
+            <div class="race-days">
+              <span>剩余</span>
+              <b id="raceDaysLeft">--</b>
+              <em>天</em>
+            </div>
+          </section>
+
+          <section class="race-result-grid">
+            <article class="race-result winner">
+              <span id="winnerLabel">当前第一</span>
+              <strong id="winnerName">--</strong>
+              <p id="winnerScore">--</p>
+            </article>
+            <article class="race-result loser">
+              <span id="loserLabel">请客候选</span>
+              <strong id="loserName">--</strong>
+              <p id="loserScore">--</p>
+            </article>
+          </section>
+
+          <section class="panel leaderboard-panel">
+            <div class="panel-heading">
+              <h2>排行榜</h2>
+              <input id="rankDate" type="date" />
+            </div>
+            <div class="rank-tabs" role="tablist" aria-label="排行榜排序">
+              <button class="rank-tab" type="button" data-rank-mode="dailyPercent">今日排行</button>
+              <button class="rank-tab active" type="button" data-rank-mode="totalLoss">总排行</button>
+            </div>
+            <div id="leaderboard" class="rank-list"></div>
+          </section>
+        </section>
+
+        <section class="app-page" data-page="profile">
+          <section class="panel profile-card">
+            <button class="avatar" id="profileAvatar" type="button" aria-label="上传头像">--</button>
+            <input id="avatarInput" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+            <input id="avatarCameraInput" type="file" accept="image/*" capture="user" hidden />
+            <div class="profile-main">
+              <span>我的账号</span>
+              <strong id="profileName">--</strong>
+              <p id="profileAccount">--</p>
+            </div>
+            <button type="button" class="profile-edit-button" data-profile-action="profile">编辑</button>
+          </section>
+
+          <section class="profile-summary">
+            <article>
+              <span>当前体重</span>
+              <strong id="profileCurrentWeight">--</strong>
+            </article>
+            <article>
+              <span>目标体重</span>
+              <strong id="profileTargetWeight">--</strong>
+            </article>
+            <article>
+              <span>累计减重</span>
+              <strong id="profileTotalLoss">--</strong>
+            </article>
+            <article>
+              <span>打卡天数</span>
+              <strong id="profileRecordDays">--</strong>
+            </article>
+          </section>
+
+          <section class="panel option-panel">
+            <div class="option-row unit-row">
+              <span>体重单位</span>
+              <div class="unit-toggle" role="group" aria-label="体重单位">
+                <button type="button" class="unit-button active" data-unit="kg">kg</button>
+                <button type="button" class="unit-button" data-unit="jin">斤</button>
+              </div>
+            </div>
+            <button type="button" class="option-row" data-profile-action="competition">
+              <span>比赛设置</span>
+              <b>›</b>
+            </button>
+            <button type="button" class="option-row">
+              <span>目标设置</span>
+              <b>›</b>
+            </button>
+            <button type="button" class="option-row">
+              <span>账号安全</span>
+              <b>›</b>
+            </button>
+            <button type="button" class="option-row">
+              <span>数据与备份</span>
+              <b>›</b>
+            </button>
+            <button type="button" class="option-row" data-profile-action="rules">
+              <span>比赛说明</span>
+              <b>›</b>
+            </button>
+          </section>
+
+          <button id="seedBtn" class="seed-button" type="button">生成模拟数据</button>
+          <button id="logoutBtn" class="logout-button" type="button">注销登录</button>
+        </section>
+
+        <section class="app-page" data-page="competitionSettings">
+          <section class="panel competition-settings">
+            <div class="panel-heading page-heading">
+              <button id="backProfileBtn" class="back-button" type="button" aria-label="返回">‹</button>
+              <h2>比赛设置</h2>
+            </div>
+            <form id="competitionForm" class="settings-form">
+              <label>开始日期<input id="competitionStartDate" name="startDate" type="date" required /></label>
+              <label>比赛天数<input id="competitionDurationDays" name="durationDays" type="number" min="1" max="365" step="1" required /></label>
+              <button class="primary" type="submit">保存比赛设置</button>
+              <p id="competitionMessage" class="message"></p>
+            </form>
+          </section>
+        </section>
+
+        <nav class="tabbar" aria-label="主导航">
+          <button class="tabbar-item active" type="button" data-tab-page="home">
+            <span class="tabbar-icon icon-home"></span>
+            <span>首页</span>
+          </button>
+          <button class="tabbar-item" type="button" data-tab-page="stats">
+            <span class="tabbar-icon icon-stats"></span>
+            <span>统计</span>
+          </button>
+          <button class="tabbar-item tabbar-main" type="button" data-tab-page="checkin">
+            <span class="tabbar-icon icon-plus"></span>
+          </button>
+          <button class="tabbar-item" type="button" data-tab-page="rank">
+            <span class="tabbar-icon icon-rank"></span>
+            <span>排行</span>
+          </button>
+          <button class="tabbar-item" type="button" data-tab-page="profile">
+            <span class="tabbar-icon icon-user"></span>
+            <span>我的</span>
+          </button>
+        </nav>
+      </section>
+
+      <section id="rulesModal" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card">
+          <h2>比赛说明</h2>
+          <p>比赛周期默认 30 天，可以在“我的”页面自定义开始日期和比赛天数。</p>
+          <p>最终按照累计减重比例排名：减重比例最高的人获胜，最低的人需要请客吃饭。</p>
+          <p>比赛进行中只公开名次，不展示其他人的具体体重和减重数值；到最后一天会公开最终排行和具体数值。</p>
+          <button id="closeRulesBtn" class="primary" type="button">知道了</button>
+        </div>
+      </section>
+
+      <section id="deleteModal" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card confirm-card">
+          <span class="confirm-icon">!</span>
+          <h2>删除这条记录？</h2>
+          <p id="deleteModalText">删除后不能恢复，但可以重新打卡覆盖当天数据。</p>
+          <div class="confirm-actions">
+            <button id="cancelDeleteBtn" class="secondary-button" type="button">取消</button>
+            <button id="confirmDeleteBtn" class="danger-button" type="button">删除</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="recordDetailModal" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card record-detail-card">
+          <h2>记录详情</h2>
+          <div class="detail-list">
+            <div>
+              <span>日期</span>
+              <strong id="detailDate">--</strong>
+            </div>
+            <div>
+              <span>体重</span>
+              <strong id="detailWeight">--</strong>
+            </div>
+            <div id="detailOwnerRow" class="hidden">
+              <span>成员</span>
+              <strong id="detailOwner">--</strong>
+            </div>
+            <div>
+              <span>备注</span>
+              <p id="detailNote">暂无备注</p>
+            </div>
+          </div>
+          <button id="closeRecordDetailBtn" class="primary" type="button">知道了</button>
+        </div>
+      </section>
+
+      <section id="profileEditModal" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card">
+          <h2>编辑个人信息</h2>
+          <label>昵称<input id="profileNameInput" maxlength="24" /></label>
+          <button id="saveProfileBtn" class="primary" type="button">保存</button>
+          <p id="profileEditMessage" class="message"></p>
+        </div>
+      </section>
+
+      <section id="avatarSourceModal" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card avatar-source-card">
+          <h2>更换头像</h2>
+          <button id="uploadAvatarBtn" class="primary" type="button">从相册选择</button>
+          <button id="cameraAvatarBtn" class="secondary-button" type="button">拍照</button>
+          <button id="cancelAvatarSourceBtn" class="secondary-button" type="button">取消</button>
+        </div>
+      </section>
+
+      <section id="avatarEditorModal" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card avatar-editor-card">
+          <h2>编辑头像</h2>
+          <canvas id="avatarCanvas" class="avatar-canvas" width="260" height="260" aria-label="头像预览"></canvas>
+          <p class="avatar-editor-tip">拖动圆形窗口截取头像，滑动下方控制缩放。</p>
+          <label>缩放<input id="avatarZoom" type="range" min="1" max="3" step="0.01" value="1" /></label>
+          <div class="confirm-actions">
+            <button id="cancelAvatarEditBtn" class="secondary-button" type="button">取消</button>
+            <button id="saveAvatarBtn" class="primary" type="button">保存头像</button>
+          </div>
+          <p id="avatarEditMessage" class="message"></p>
+        </div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

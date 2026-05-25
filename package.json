@@ -1,0 +1,13 @@
+{
+  "name": "jianfeijihua",
+  "version": "1.0.0",
+  "private": true,
+  "description": "减肥记录与每日排行 PK 小应用",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,52 @@
+<view class="page auth-page">
+  <view class="brand panel">
+    <text class="eyebrow">减肥记录 · 好友 PK</text>
+    <text class="brand-title">轻盈计划</text>
+    <text class="brand-copy">记录体重、同步进度、用真实变化和朋友们轻松排行。</text>
+  </view>
+
+  <view class="panel">
+    <view class="tabs">
+      <button class="tab {{mode === 'login' ? 'active' : ''}}" bindtap="switchMode" data-mode="login">登录</button>
+      <button class="tab {{mode === 'register' ? 'active' : ''}}" bindtap="switchMode" data-mode="register">注册</button>
+    </view>
+
+    <block wx:if="{{mode === 'login'}}">
+      <view class="field">
+        <view class="field-label">账号</view>
+        <input value="{{loginForm.account}}" data-key="account" bindinput="onLoginInput" />
+      </view>
+      <view class="field">
+        <view class="field-label">密码</view>
+        <input password value="{{loginForm.password}}" data-key="password" bindinput="onLoginInput" />
+      </view>
+      <button class="button" bindtap="submitLogin">进入</button>
+    </block>
+
+    <block wx:else>
+      <view class="field">
+        <view class="field-label">账号</view>
+        <input value="{{registerForm.account}}" data-key="account" bindinput="onRegisterInput" />
+      </view>
+      <view class="field">
+        <view class="field-label">昵称</view>
+        <input value="{{registerForm.name}}" data-key="name" bindinput="onRegisterInput" />
+      </view>
+      <view class="field">
+        <view class="field-label">密码</view>
+        <input password value="{{registerForm.password}}" data-key="password" bindinput="onRegisterInput" />
+      </view>
+      <view class="grid-2">
+        <view class="field">
+          <view class="field-label">初始体重 kg</view>
+          <input type="digit" value="{{registerForm.startWeight}}" data-key="startWeight" bindinput="onRegisterInput" />
+        </view>
+        <view class="field">
+          <view class="field-label">目标体重 kg</view>
+          <input type="digit" value="{{registerForm.targetWeight}}" data-key="targetWeight" bindinput="onRegisterInput" />
+        </view>
+      </view>
+      <button class="button" bindtap="submitRegister">创建账号</button>
+    </block>
+  </view>
+</view>

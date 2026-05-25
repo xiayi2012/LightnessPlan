@@ -1,0 +1,102 @@
+.hero {
+  overflow: hidden;
+  background: linear-gradient(135deg, #ffffff 0%, #fff5ee 58%, #fffaf6 100%);
+  box-shadow: 0 22rpx 50rpx rgba(115, 72, 52, 0.15), 0 8rpx 18rpx rgba(115, 72, 52, 0.07);
+}
+
+.hero .muted {
+  display: block;
+}
+
+.hero-weight {
+  display: block;
+  margin: 20rpx 0 18rpx;
+  font-size: 96rpx;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.progress {
+  height: 20rpx;
+  margin-top: 28rpx;
+  overflow: hidden;
+  border-radius: 999rpx;
+  background: #f6e5db;
+}
+
+.progress-inner {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #e9826e, #f4c15d);
+}
+
+.records-panel {
+  margin-top: 22rpx;
+}
+
+.swipe-record {
+  position: relative;
+  min-height: 96rpx;
+  margin-bottom: 16rpx;
+  overflow: hidden;
+  border: 1rpx solid #f0ddd3;
+  border-radius: 16rpx;
+  background: #fff0e8;
+  box-shadow: 0 8rpx 18rpx rgba(115, 72, 52, 0.06);
+}
+
+.record-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  min-height: 96rpx;
+  padding: 22rpx;
+  background: #fffaf7;
+  transition: transform 0.22s ease;
+  box-sizing: border-box;
+}
+
+.swipe-record.open .record-content {
+  transform: translateX(-176rpx);
+}
+
+.record-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  display: flex;
+  width: 176rpx;
+}
+
+.record-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  height: 100%;
+  border-radius: 0;
+  background: #ffe9dd;
+  color: #b95549;
+  font-size: 24rpx;
+  font-weight: 900;
+}
+
+.record-actions .delete {
+  background: #fff0f2;
+  color: #d94f4f;
+}
+
+.record-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.record-weight {
+  flex: 0 0 auto;
+  margin-left: 18rpx;
+  color: #e9826e;
+  font-weight: 900;
+}
