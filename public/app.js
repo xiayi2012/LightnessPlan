@@ -580,10 +580,10 @@ function rankAvatar(user = {}) {
 }
 
 function rankBadge(item, index) {
-  if (index === 0) return "轻盈王";
-  if (index === 1) return "稳步追赶";
-  if (index === 2) return "潜力选手";
-  return "";
+  if (index === 0) return "减肥王";
+  if (index === 1) return "千年老二";
+  if (index === 2) return "小菜鸡";
+  return "拉完了";
 }
 
 function renderCompetition() {
