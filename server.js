@@ -131,6 +131,7 @@ function safeUser(user) {
     name: user.name,
     startWeight: user.startWeight,
     targetWeight: user.targetWeight,
+    birthday: user.birthday || "",
     avatar: user.avatar || "",
     createdAt: user.createdAt
   };
@@ -474,6 +475,18 @@ async function handleApi(req, res, pathname) {
         const name = normalizeName(body.name);
         if (!name || name.length > 24) return json(res, 400, { error: "昵称需为 1-24 个字符" });
         user.name = name;
+      }
+      if (body.birthday !== undefined) {
+        const birthday = String(body.birthday || "").slice(0, 10);
+        if (birthday && !isDateText(birthday)) return json(res, 400, { error: "出生日期格式不正确" });
+        user.birthday = birthday;
+      }
+      if (body.password !== undefined && String(body.password || "").trim()) {
+        const password = String(body.password);
+        if (password.length < 6) return json(res, 400, { error: "密码至少 6 位" });
+        const { salt, hash } = hashPassword(password);
+        user.salt = salt;
+        user.passwordHash = hash;
       }
       await writeDb(db);
       return json(res, 200, { user: safeUser(user), stats: userStats(db, user.id) });

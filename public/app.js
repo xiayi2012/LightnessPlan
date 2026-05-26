@@ -5,7 +5,7 @@ const state = {
   community: [],
   leaderboard: [],
   competition: null,
-  unit: localStorage.getItem("weightUnit") === "jin" ? "jin" : "kg"
+  unit: localStorage.getItem("weightUnit") === "kg" ? "kg" : "jin"
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -163,14 +163,38 @@ function closeRecordPage() {
   switchPage(previousPageBeforeCheckin || "home");
 }
 
+function openModal(selector) {
+  const modal = typeof selector === "string" ? $(selector) : selector;
+  if (!modal) return;
+  modal.classList.remove("is-closing");
+  modal.classList.remove("hidden");
+}
+
+function closeModal(selector, afterClose) {
+  const modal = typeof selector === "string" ? $(selector) : selector;
+  if (!modal || modal.classList.contains("hidden")) {
+    afterClose?.();
+    return;
+  }
+  modal.classList.add("is-closing");
+  window.setTimeout(() => {
+    modal.classList.add("hidden");
+    modal.classList.remove("is-closing");
+    afterClose?.();
+  }, 180);
+}
+
 function openProfileEdit() {
+  $("#profileAccountInput").value = state.user?.account || "";
   $("#profileNameInput").value = state.user?.name || "";
+  $("#profileBirthdayInput").value = state.user?.birthday || "";
+  $("#profilePasswordInput").value = "";
   $("#profileEditMessage").textContent = "";
-  $("#profileEditModal").classList.remove("hidden");
+  openModal("#profileEditModal");
 }
 
 function closeProfileEdit() {
-  $("#profileEditModal").classList.add("hidden");
+  closeModal("#profileEditModal");
 }
 
 function openAvatarSource(event) {
@@ -182,31 +206,34 @@ function openAvatarSource(event) {
   avatarSourceOpenedAt = now;
   closeProfileEdit();
   closeAvatarEditor();
-  modal.classList.remove("hidden");
+  openModal(modal);
 }
 
 function closeAvatarSource() {
-  $("#avatarSourceModal").classList.add("hidden");
+  closeModal("#avatarSourceModal");
 }
 
 function closeAvatarEditor() {
-  $("#avatarEditorModal").classList.add("hidden");
-  $("#avatarEditMessage").textContent = "";
-  avatarEditorImage = null;
-  avatarDragState = null;
-  avatarCropX = 130;
-  avatarCropY = 130;
+  closeModal("#avatarEditorModal", () => {
+    $("#avatarEditMessage").textContent = "";
+    avatarEditorImage = null;
+    avatarDragState = null;
+    avatarCropX = 130;
+    avatarCropY = 130;
+  });
 }
 
 function closeDeleteModal() {
-  pendingDeleteRecordId = null;
-  $("#deleteModal").classList.add("hidden");
+  closeModal("#deleteModal", () => {
+    pendingDeleteRecordId = null;
+  });
 }
 
 function closeRecordDetail() {
-  detailRecordId = null;
-  $("#detailMessage").textContent = "";
-  $("#recordDetailModal").classList.add("hidden");
+  closeModal("#recordDetailModal", () => {
+    detailRecordId = null;
+    $("#detailMessage").textContent = "";
+  });
 }
 
 function renderShell() {
@@ -224,7 +251,7 @@ function renderShell() {
   $("#targetWeight").textContent = kg(state.user.targetWeight);
   $("#recordDays").textContent = `${state.stats.totalRecords} 天`;
   $("#profileName").textContent = state.user.name;
-  $("#profileAccount").textContent = state.user.account;
+  $("#profileBirthday").textContent = state.user.birthday ? `出生日期 ${state.user.birthday}` : "点击编辑完善资料";
   renderAvatar();
   $("#profileCurrentWeight").textContent = kg(state.stats.latestWeight);
   $("#profileTargetWeight").textContent = kg(state.user.targetWeight);
@@ -284,7 +311,7 @@ function openAvatarEditor(dataUrl) {
     avatarCropRadius = Math.round(avatarCanvas.width * 0.36);
     avatarDragState = null;
     avatarZoom.value = "1";
-    $("#avatarEditorModal").classList.remove("hidden");
+    openModal("#avatarEditorModal");
     $("#avatarEditMessage").textContent = "";
     renderAvatarEditor();
   };
@@ -475,7 +502,7 @@ function openRecordDetail(record, ownerName = "") {
     $(selector).disabled = !isOwnRecord;
   });
   $("#saveRecordDetailBtn").classList.toggle("hidden", !isOwnRecord);
-  $("#recordDetailModal").classList.remove("hidden");
+  openModal("#recordDetailModal");
 }
 
 async function saveRecordDetail() {
@@ -587,6 +614,32 @@ function rankScore(item) {
   return `${kg(item.weight)}<br><span>${Number(item.totalPercent ?? 0).toFixed(2)}%</span>`;
 }
 
+function exportRankReport() {
+  if (!state.leaderboard.length) {
+    alert("暂无可导出的排行数据");
+    return;
+  }
+  const modeText = rankMode === "totalLoss" ? "总排行" : "今日排行";
+  const lines = [
+    "轻盈计划减肥排行报告",
+    `排行类型：${modeText}`,
+    `生成时间：${new Date().toLocaleString("zh-CN")}`,
+    "",
+    ...state.leaderboard.map((item, index) => `第${index + 1}名：${item.user?.name || "未命名成员"}`),
+    "",
+    "说明：本报告仅包含排行名次和成员名称，不包含具体体重、减重数或减重比例。"
+  ];
+  const blob = new Blob([lines.join("\n")], { type: "text/plain;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `轻盈计划-${modeText}报告-${today}.txt`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function renderGoalProgress() {
   const start = Number(state.user?.startWeight);
   const target = Number(state.user?.targetWeight);
@@ -601,7 +654,7 @@ function renderGoalProgress() {
   const progress = Math.max(0, Math.min(100, (done / total) * 100));
   const distance = Math.abs(latest - target);
   $("#goalProgress").style.width = `${progress.toFixed(0)}%`;
-  $("#homeProgressText").textContent = `已完成 ${progress.toFixed(0)}%，距离目标 ${distance.toFixed(1)}kg`;
+  $("#homeProgressText").textContent = `已完成 ${progress.toFixed(0)}%，距离目标 ${kg(distance)}`;
 }
 
 function renderStats() {
@@ -621,7 +674,6 @@ function renderStats() {
 function renderCharts(records) {
   const recent = records.slice(-10);
   $("#lineChart").innerHTML = recent.length > 1 ? lineChartSvg(recent) : `<div class="empty">至少 2 条记录后显示折线图</div>`;
-  $("#barChart").innerHTML = recent.length > 1 ? barChartSvg(recent) : `<div class="empty">至少 2 条记录后显示柱状图</div>`;
 }
 
 function lineChartSvg(records) {
@@ -644,32 +696,6 @@ function lineChartSvg(records) {
       ${points.map((point) => `<circle class="chart-dot" cx="${point.split(",")[0]}" cy="${point.split(",")[1]}" r="4" />`).join("")}
       <text x="${padding}" y="18">${kg(max)}</text>
       <text x="${padding}" y="${height - 6}">${kg(min)}</text>
-    </svg>
-  `;
-}
-
-function barChartSvg(records) {
-  const width = 320;
-  const height = 160;
-  const padding = 24;
-  const diffs = records.slice(1).map((record, index) => ({
-    date: record.date,
-    value: Number((records[index].weight - record.weight).toFixed(2))
-  }));
-  const max = Math.max(0.1, ...diffs.map((item) => Math.abs(item.value)));
-  const barWidth = (width - padding * 2) / diffs.length - 6;
-  const zeroY = height / 2;
-  return `
-    <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="每日变化柱状图">
-      <path class="chart-grid" d="M${padding} ${padding}H${width - padding}M${padding} ${zeroY}H${width - padding}M${padding} ${height - padding}H${width - padding}" />
-      ${diffs.map((item, index) => {
-        const x = padding + index * ((width - padding * 2) / diffs.length) + 3;
-        const barHeight = Math.max(3, Math.abs(item.value) / max * 54);
-        const y = item.value >= 0 ? zeroY - barHeight : zeroY;
-        return `<rect class="${item.value >= 0 ? "chart-bar-good" : "chart-bar-bad"}" x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barWidth.toFixed(1)}" height="${barHeight.toFixed(1)}" rx="4" />`;
-      }).join("")}
-      <text x="${padding}" y="18">减重</text>
-      <text x="${padding}" y="${height - 6}">增重</text>
     </svg>
   `;
 }
@@ -784,7 +810,7 @@ document.addEventListener("click", async (event) => {
   if (actionButton.dataset.action === "delete-record") {
     pendingDeleteRecordId = record.id;
     $("#deleteModalText").textContent = `确定删除 ${record.date} 的体重记录吗？删除后不能恢复，但可以重新打卡覆盖当天数据。`;
-    $("#deleteModal").classList.remove("hidden");
+    openModal("#deleteModal");
   }
 });
 
@@ -884,7 +910,10 @@ $("#registerForm").addEventListener("submit", async (event) => {
   event.preventDefault();
   authMessage.textContent = "";
   try {
-    const data = await api("/api/register", { method: "POST", body: JSON.stringify(formData(event.currentTarget)) });
+    const payload = formData(event.currentTarget);
+    payload.startWeight = inputWeightToKg(payload.startWeight);
+    payload.targetWeight = inputWeightToKg(payload.targetWeight);
+    const data = await api("/api/register", { method: "POST", body: JSON.stringify(payload) });
     state.user = data.user;
     state.stats = data.stats;
     await refreshAll();
@@ -920,6 +949,8 @@ rankDate?.addEventListener("change", async () => {
   state.competition = data.competition;
   renderLeaderboard();
 });
+
+$("#exportRankReportBtn")?.addEventListener("click", exportRankReport);
 
 $("#competitionForm").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -958,7 +989,7 @@ document.querySelectorAll("[data-profile-action]").forEach((button) => {
   button.addEventListener("click", () => {
     if (button.dataset.profileAction === "profile") openProfileEdit();
     if (button.dataset.profileAction === "competition") switchPage("competitionSettings");
-    if (button.dataset.profileAction === "rules") $("#rulesModal").classList.remove("hidden");
+    if (button.dataset.profileAction === "rules") openModal("#rulesModal");
   });
 });
 
@@ -992,7 +1023,13 @@ $("#saveProfileBtn").addEventListener("click", async () => {
   const message = $("#profileEditMessage");
   message.textContent = "";
   try {
-    const data = await api("/api/me", { method: "PATCH", body: JSON.stringify({ name: $("#profileNameInput").value }) });
+    const payload = {
+      name: $("#profileNameInput").value,
+      birthday: $("#profileBirthdayInput").value
+    };
+    const password = $("#profilePasswordInput").value;
+    if (password) payload.password = password;
+    const data = await api("/api/me", { method: "PATCH", body: JSON.stringify(payload) });
     state.user = data.user;
     state.stats = data.stats;
     closeProfileEdit();
@@ -1042,9 +1079,9 @@ $("#avatarEditorModal").addEventListener("click", (event) => {
   if (event.target.id === "avatarEditorModal") closeAvatarEditor();
 });
 
-$("#closeRulesBtn").addEventListener("click", () => $("#rulesModal").classList.add("hidden"));
+$("#closeRulesBtn").addEventListener("click", () => closeModal("#rulesModal"));
 $("#rulesModal").addEventListener("click", (event) => {
-  if (event.target.id === "rulesModal") $("#rulesModal").classList.add("hidden");
+  if (event.target.id === "rulesModal") closeModal("#rulesModal");
 });
 
 async function handleAvatarFile(file, input) {

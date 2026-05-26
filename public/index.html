@@ -37,8 +37,8 @@
             <label>昵称<input name="name" maxlength="24" required /></label>
             <label>密码<input name="password" type="password" autocomplete="new-password" minlength="6" required /></label>
             <div class="field-grid">
-              <label>初始体重 kg<input name="startWeight" type="number" min="20" max="400" step="0.1" required /></label>
-              <label>目标体重 kg<input name="targetWeight" type="number" min="20" max="400" step="0.1" required /></label>
+              <label>初始体重 斤<input name="startWeight" type="number" min="40" max="800" step="0.1" required /></label>
+              <label>目标体重 斤<input name="targetWeight" type="number" min="40" max="800" step="0.1" required /></label>
             </div>
             <button class="primary" type="submit">创建账号</button>
           </form>
@@ -47,6 +47,22 @@
       </section>
 
       <section id="dashboardView" class="mobile-app hidden">
+        <aside class="desktop-panel" aria-label="桌面端介绍">
+          <p class="eyebrow">轻盈计划</p>
+          <h2>记录体重，每日排行，减肥比赛。</h2>
+          <p>桌面端适合查看趋势、整理记录和导出排行报告；手机端继续保持 App 式操作。</p>
+          <div class="desktop-feature-grid">
+            <span>体重打卡</span>
+            <span>排行 PK</span>
+            <span>趋势统计</span>
+            <span>资料管理</span>
+          </div>
+          <div class="desktop-tip">
+            <strong>当前版本</strong>
+            <span>数据默认以斤展示，排行报告不包含具体体重数据。</span>
+          </div>
+        </aside>
+
         <header class="app-header">
           <div>
             <p class="eyebrow" id="pageEyebrow">今日战况</p>
@@ -123,10 +139,6 @@
                 <h3>折线图</h3>
                 <div id="lineChart" class="chart-box"></div>
               </section>
-              <section>
-                <h3>柱状图</h3>
-                <div id="barChart" class="chart-box"></div>
-              </section>
             </div>
           </section>
 
@@ -181,6 +193,7 @@
           <section class="panel leaderboard-panel">
             <div class="panel-heading">
               <h2>排行榜</h2>
+              <button id="exportRankReportBtn" class="secondary-button export-report-button" type="button">导出报告</button>
             </div>
             <div class="rank-tabs" role="tablist" aria-label="排行榜排序">
               <button class="rank-tab" type="button" data-rank-mode="dailyPercent">今日排行</button>
@@ -196,9 +209,9 @@
             <input id="avatarInput" type="file" accept="image/jpeg,image/png,image/webp" hidden />
             <input id="avatarCameraInput" type="file" accept="image/*" capture="user" hidden />
             <div class="profile-main">
-              <span>我的账号</span>
+              <span>个人资料</span>
               <strong id="profileName">--</strong>
-              <p id="profileAccount">--</p>
+              <p id="profileBirthday">点击编辑完善资料</p>
             </div>
             <button type="button" class="profile-edit-button" data-profile-action="profile">编辑</button>
           </section>
@@ -226,8 +239,8 @@
             <div class="option-row unit-row">
               <span>体重单位</span>
               <div class="unit-toggle" role="group" aria-label="体重单位">
-                <button type="button" class="unit-button active" data-unit="kg">kg</button>
-                <button type="button" class="unit-button" data-unit="jin">斤</button>
+                <button type="button" class="unit-button" data-unit="kg">kg</button>
+                <button type="button" class="unit-button active" data-unit="jin">斤</button>
               </div>
             </div>
             <button type="button" class="option-row" data-profile-action="competition">
@@ -342,7 +355,10 @@
       <section id="profileEditModal" class="modal hidden" aria-modal="true" role="dialog">
         <div class="modal-card">
           <h2>编辑个人信息</h2>
+          <label>账号<input id="profileAccountInput" disabled /></label>
           <label>昵称<input id="profileNameInput" maxlength="24" /></label>
+          <label>出生日期<input id="profileBirthdayInput" type="date" /></label>
+          <label>修改密码<input id="profilePasswordInput" type="password" autocomplete="new-password" minlength="6" placeholder="不修改可留空" /></label>
           <button id="saveProfileBtn" class="primary" type="button">保存</button>
           <p id="profileEditMessage" class="message"></p>
         </div>
