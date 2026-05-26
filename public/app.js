@@ -21,6 +21,7 @@ const recordWeightRange = $("#recordWeightRange");
 const rankDate = $("#rankDate");
 const avatarInput = $("#avatarInput");
 const avatarCameraInput = $("#avatarCameraInput");
+const recordsImportInput = $("#recordsImportInput");
 const avatarCanvas = $("#avatarCanvas");
 const avatarZoom = $("#avatarZoom");
 let rankMode = "totalLoss";
@@ -74,6 +75,10 @@ function kg(value) {
   return state.unit === "jin" ? `${(number * 2).toFixed(1)}斤` : `${number.toFixed(1)}kg`;
 }
 
+function unitName() {
+  return state.unit === "jin" ? "斤" : "kg";
+}
+
 function signedKg(value) {
   if (value === null || value === undefined || Number.isNaN(Number(value))) return "--";
   const number = Number(value);
@@ -116,7 +121,9 @@ function updateUnitControls() {
     recordWeightRange.min = state.unit === "jin" ? "40" : "20";
     recordWeightRange.max = state.unit === "jin" ? "800" : "400";
   }
-  if (label) label.textContent = state.unit === "jin" ? "体重 斤" : "体重 kg";
+  if (label) label.textContent = `体重 ${unitName()}`;
+  const detailLabel = $("#detailWeightLabel");
+  if (detailLabel) detailLabel.textContent = `体重 ${unitName()}`;
   syncWeightRangeFromInput();
 }
 
@@ -188,6 +195,7 @@ function openProfileEdit() {
   $("#profileAccountInput").value = state.user?.account || "";
   $("#profileNameInput").value = state.user?.name || "";
   $("#profileBirthdayInput").value = state.user?.birthday || "";
+  $("#profileCurrentPasswordInput").value = "";
   $("#profilePasswordInput").value = "";
   $("#profileEditMessage").textContent = "";
   openModal("#profileEditModal");
@@ -253,10 +261,8 @@ function renderShell() {
   $("#profileName").textContent = state.user.name;
   $("#profileBirthday").textContent = state.user.birthday ? `出生日期 ${state.user.birthday}` : "点击编辑完善资料";
   renderAvatar();
-  $("#profileCurrentWeight").textContent = kg(state.stats.latestWeight);
-  $("#profileTargetWeight").textContent = kg(state.user.targetWeight);
-  $("#profileTotalLoss").textContent = cumulativeKg(state.stats.totalLoss);
-  $("#profileRecordDays").textContent = `${state.stats.totalRecords} 天`;
+  $("#desktopCurrentWeight").textContent = `当前体重 ${kg(state.stats.latestWeight)}`;
+  $("#desktopTotalLoss").textContent = `累计减重 ${cumulativeKg(state.stats.totalLoss)}`;
   renderGoalProgress();
   updateUnitControls();
 }
@@ -267,7 +273,7 @@ function renderRecords() {
   if (myRecords) {
     myRecords.innerHTML = state.records.length
       ? state.records.map((record) => recordCard(record, "", true)).join("")
-      : `<div class="empty">还没有记录</div>`;
+      : emptyState("还没有记录", "从中间的加号开始第一次体重打卡。");
   }
   const communityRecords = $("#communityRecords");
   if (communityRecords) {
@@ -277,14 +283,18 @@ function renderRecords() {
   }
   $("#homeRecentRecords").innerHTML = recentHomeRecords.length
     ? recentHomeRecords.map((record) => recordCard(record, "", true)).join("")
-    : `<div class="empty">今天从第一条记录开始。</div>`;
+    : emptyState("今天从第一条记录开始", "打卡后这里会显示最近 7 天记录。");
   const statsAllRecords = $("#statsAllRecords");
   if (statsAllRecords) {
     statsAllRecords.innerHTML = state.records.length
       ? state.records.map((record) => recordCard(record, "", true)).join("")
-      : `<div class="empty">还没有体重记录</div>`;
+      : emptyState("还没有体重记录", "有记录后折线趋势会更清晰。");
   }
   renderStats();
+}
+
+function emptyState(title, text = "") {
+  return `<div class="empty"><strong>${escapeHtml(title)}</strong>${text ? `<span>${escapeHtml(text)}</span>` : ""}</div>`;
 }
 
 function avatarText(name) {
@@ -546,19 +556,20 @@ function renderLeaderboard() {
     ? state.leaderboard.map((item, index) => {
       const description = rankDescription(item, index);
       const score = rankScore(item);
+      const badge = rankBadge(item, index);
       return `
         <article class="rank-item ${item.own ? "own-rank" : ""}">
           <div class="rank-num">${index + 1}</div>
           ${rankAvatar(item.user)}
           <div>
-            <div class="rank-name">${escapeHtml(item.user.name)}</div>
+            <div class="rank-name">${escapeHtml(item.user.name)}${badge ? `<span class="rank-badge">${badge}</span>` : ""}</div>
             ${description ? `<div class="rank-meta">${description}</div>` : ""}
           </div>
           ${score ? `<div class="rank-score">${score}</div>` : ""}
         </article>
       `;
     }).join("")
-    : `<div class="empty">${rankMode === "totalLoss" ? "还没有可排行的体重记录。" : "这个日期还没有可排行的今日减重比例。"}</div>`;
+    : emptyState("还没有排行", rankMode === "totalLoss" ? "大家打卡后会在这里看到名次。" : "今日有两次对比记录后会产生排行。");
 }
 
 function rankAvatar(user = {}) {
@@ -568,6 +579,13 @@ function rankAvatar(user = {}) {
   return `<div class="rank-avatar">${escapeHtml(avatarText(user.name))}</div>`;
 }
 
+function rankBadge(item, index) {
+  if (index === 0) return "轻盈王";
+  if (index === 1) return "稳步追赶";
+  if (index === 2) return "潜力选手";
+  return "";
+}
+
 function renderCompetition() {
   const competition = state.competition;
   if (!competition) return;
@@ -575,6 +593,10 @@ function renderCompetition() {
   $("#raceTitle").textContent = competition.isFinished ? "最终结果" : "当前赛况";
   $("#raceDateRange").textContent = `${competition.startDate} 至 ${competition.endDate}`;
   $("#raceDaysLeft").textContent = competition.isFinished ? "0" : competition.daysLeft;
+  $("#desktopRaceDays").textContent = competition.isFinished ? "比赛已结束" : `剩余 ${competition.daysLeft} 天`;
+  $("#desktopLeaderText").textContent = competition.isFinished
+    ? `获胜者 ${competition.winner?.user?.name || "--"}，请客候选 ${competition.loser?.user?.name || "--"}`
+    : `当前第一 ${competition.winner?.user?.name || "--"}，请客候选 ${competition.loser?.user?.name || "--"}`;
   $("#winnerLabel").textContent = competition.isFinished ? "获胜者" : "当前第一";
   $("#loserLabel").textContent = competition.isFinished ? "请客吃饭" : "请客候选";
   $("#winnerName").textContent = competition.winner?.user?.name || "--";
@@ -589,6 +611,14 @@ function renderCompetition() {
       ? `${Number(competition.loser.totalPercent || 0).toFixed(2)}% · ${signedKg(competition.loser.totalLoss)}`
       : "比赛结束后公开数值"
     : "--";
+  $("#homeTreatCandidate").textContent = competition.loser?.user?.name || "--";
+  const ownIndex = state.leaderboard.findIndex((item) => item.own);
+  $("#homeRankText").textContent = ownIndex >= 0 ? `第 ${ownIndex + 1} 名` : "--";
+  const treatButton = $("#treatDoneBtn");
+  if (treatButton) {
+    treatButton.classList.toggle("hidden", !competition.isFinished || !competition.loser);
+    treatButton.textContent = competition.treatDone ? "已请客" : "标记已请客";
+  }
   renderCompetitionSettings();
 }
 
@@ -605,12 +635,12 @@ function rankDescription(item, index) {
   if (item.hidden) {
     return "";
   }
-  if (item.own) return `当前体重 ${kg(item.weight)} · 减重比例 ${Number(item.totalPercent ?? 0).toFixed(2)}%`;
+  if (item.own || state.competition?.isFinished) return `当前体重 ${kg(item.weight)} · 减重比例 ${Number(item.totalPercent ?? 0).toFixed(2)}%`;
   return "";
 }
 
 function rankScore(item) {
-  if (!item.own || item.hidden) return "";
+  if (item.hidden || (!item.own && !state.competition?.isFinished)) return "";
   return `${kg(item.weight)}<br><span>${Number(item.totalPercent ?? 0).toFixed(2)}%</span>`;
 }
 
@@ -638,6 +668,69 @@ function exportRankReport() {
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+function downloadTextFile(filename, content, type = "text/plain;charset=utf-8") {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function exportMyRecords() {
+  if (!state.records.length) {
+    alert("暂无可导出的体重记录");
+    return;
+  }
+  if (!window.confirm("确定导出我的体重记录吗？导出的文件会包含日期、体重和备注。")) return;
+  const rows = [["date", "weightKg", "weightDisplay", "note", "createdAt"]];
+  state.records
+    .slice()
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .forEach((record) => rows.push([
+      record.date,
+      Number(record.weight).toFixed(2),
+      kg(record.weight),
+      record.note || "",
+      record.createdAt || ""
+    ]));
+  const csv = rows.map((row) => row.map((cell) => `"${String(cell).replaceAll('"', '""')}"`).join(",")).join("\n");
+  downloadTextFile(`轻盈计划-我的体重记录-${today}.csv`, csv, "text/csv;charset=utf-8");
+}
+
+function parseImportedRecords(text, filename = "") {
+  if (/\.json$/i.test(filename) || text.trim().startsWith("{") || text.trim().startsWith("[")) {
+    const data = JSON.parse(text);
+    return Array.isArray(data) ? data : data.records || [];
+  }
+  const lines = text.split(/\r?\n/).filter(Boolean);
+  const [headerLine, ...bodyLines] = lines;
+  const headers = headerLine.split(",").map((item) => item.replace(/^"|"$/g, "").trim());
+  return bodyLines.map((line) => {
+    const cells = line.match(/("([^"]|"")*"|[^,]+)/g)?.map((cell) => cell.replace(/^"|"$/g, "").replaceAll('""', '"')) || [];
+    const item = Object.fromEntries(headers.map((header, index) => [header, cells[index] || ""]));
+    const rawWeight = item.weightKg || item.weight || item.weightDisplay || "";
+    return {
+      date: item.date,
+      weight: item.weightKg ? Number(item.weightKg) : inputWeightToKg(String(rawWeight).replace(/[^\d.]/g, "")),
+      note: item.note || ""
+    };
+  });
+}
+
+async function importMyRecords(file) {
+  if (!file) return;
+  const text = await file.text();
+  const records = parseImportedRecords(text, file.name);
+  const data = await api("/api/records/import", { method: "POST", body: JSON.stringify({ records }) });
+  alert(`已导入 ${data.imported} 条记录`);
+  recordsImportInput.value = "";
+  await refreshAll();
 }
 
 function renderGoalProgress() {
@@ -673,7 +766,7 @@ function renderStats() {
 
 function renderCharts(records) {
   const recent = records.slice(-10);
-  $("#lineChart").innerHTML = recent.length > 1 ? lineChartSvg(recent) : `<div class="empty">至少 2 条记录后显示折线图</div>`;
+  $("#lineChart").innerHTML = recent.length > 1 ? lineChartSvg(recent) : emptyState("趋势正在生成", "至少 2 条记录后显示折线图。");
 }
 
 function lineChartSvg(records) {
@@ -966,6 +1059,13 @@ $("#competitionForm").addEventListener("submit", async (event) => {
   }
 });
 
+$("#treatDoneBtn")?.addEventListener("click", async () => {
+  const done = !state.competition?.treatDone;
+  const data = await api("/api/competition/treat", { method: "PATCH", body: JSON.stringify({ done }) });
+  state.competition = data.competition;
+  renderCompetition();
+});
+
 $("#logoutBtn").addEventListener("click", async () => {
   await api("/api/logout", { method: "POST", body: "{}" });
   state.user = null;
@@ -990,6 +1090,7 @@ document.querySelectorAll("[data-profile-action]").forEach((button) => {
     if (button.dataset.profileAction === "profile") openProfileEdit();
     if (button.dataset.profileAction === "competition") switchPage("competitionSettings");
     if (button.dataset.profileAction === "rules") openModal("#rulesModal");
+    if (button.dataset.profileAction === "backup") openModal("#backupModal");
   });
 });
 
@@ -1028,8 +1129,14 @@ $("#saveProfileBtn").addEventListener("click", async () => {
       birthday: $("#profileBirthdayInput").value
     };
     const password = $("#profilePasswordInput").value;
-    if (password) payload.password = password;
+    if (password) {
+      payload.currentPassword = $("#profileCurrentPasswordInput").value;
+      payload.password = password;
+    }
     const data = await api("/api/me", { method: "PATCH", body: JSON.stringify(payload) });
+    if (payload.birthday && data.user?.birthday !== payload.birthday) {
+      throw new Error("出生日期未保存成功，请确认正式服务器已更新并重启。");
+    }
     state.user = data.user;
     state.stats = data.stats;
     closeProfileEdit();
@@ -1040,8 +1147,24 @@ $("#saveProfileBtn").addEventListener("click", async () => {
     message.textContent = error.message;
   }
 });
+
+recordsImportInput?.addEventListener("change", () => {
+  importMyRecords(recordsImportInput.files?.[0]).catch((error) => {
+    alert(error.message);
+    recordsImportInput.value = "";
+  });
+});
 $("#profileEditModal").addEventListener("click", (event) => {
   if (event.target.id === "profileEditModal") closeProfileEdit();
+});
+
+$("#exportRecordsBtn")?.addEventListener("click", exportMyRecords);
+$("#importRecordsBtn")?.addEventListener("click", () => {
+  closeModal("#backupModal", () => recordsImportInput?.click());
+});
+$("#closeBackupBtn")?.addEventListener("click", () => closeModal("#backupModal"));
+$("#backupModal")?.addEventListener("click", (event) => {
+  if (event.target.id === "backupModal") closeModal("#backupModal");
 });
 
 function triggerAvatarPicker(input) {

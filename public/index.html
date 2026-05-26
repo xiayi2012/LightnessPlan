@@ -52,14 +52,14 @@
           <h2>记录体重，每日排行，减肥比赛。</h2>
           <p>桌面端适合查看趋势、整理记录和导出排行报告；手机端继续保持 App 式操作。</p>
           <div class="desktop-feature-grid">
-            <span>体重打卡</span>
-            <span>排行 PK</span>
-            <span>趋势统计</span>
-            <span>资料管理</span>
+            <span id="desktopCurrentWeight">当前体重 --</span>
+            <span id="desktopTotalLoss">累计减重 --</span>
+            <span id="desktopRaceDays">剩余 -- 天</span>
+            <span id="desktopRankHint">排行 PK</span>
           </div>
           <div class="desktop-tip">
-            <strong>当前版本</strong>
-            <span>数据默认以斤展示，排行报告不包含具体体重数据。</span>
+            <strong id="desktopLeaderTitle">当前赛况</strong>
+            <span id="desktopLeaderText">排行数据会保护隐私，比赛结束后再公开具体数值。</span>
           </div>
         </aside>
 
@@ -76,6 +76,17 @@
             <strong id="homeLatestWeight">--</strong>
             <span id="homeProgressText">距离目标还有 --</span>
             <div class="progress-track"><div id="goalProgress" class="progress-fill"></div></div>
+          </section>
+
+          <section class="home-race-card">
+            <div>
+              <span>今日排名</span>
+              <strong id="homeRankText">--</strong>
+            </div>
+            <div>
+              <span>请客候选</span>
+              <strong id="homeTreatCandidate">--</strong>
+            </div>
           </section>
 
           <section class="stats-grid" aria-label="个人概览">
@@ -187,6 +198,7 @@
               <span id="loserLabel">请客候选</span>
               <strong id="loserName">--</strong>
               <p id="loserScore">--</p>
+              <button id="treatDoneBtn" class="secondary-button treat-button hidden" type="button">标记已请客</button>
             </article>
           </section>
 
@@ -216,25 +228,6 @@
             <button type="button" class="profile-edit-button" data-profile-action="profile">编辑</button>
           </section>
 
-          <section class="profile-summary">
-            <article>
-              <span>当前体重</span>
-              <strong id="profileCurrentWeight">--</strong>
-            </article>
-            <article>
-              <span>目标体重</span>
-              <strong id="profileTargetWeight">--</strong>
-            </article>
-            <article>
-              <span>累计减重</span>
-              <strong id="profileTotalLoss">--</strong>
-            </article>
-            <article>
-              <span>打卡天数</span>
-              <strong id="profileRecordDays">--</strong>
-            </article>
-          </section>
-
           <section class="panel option-panel">
             <div class="option-row unit-row">
               <span>体重单位</span>
@@ -251,11 +244,8 @@
               <span>目标设置</span>
               <b>›</b>
             </button>
-            <button type="button" class="option-row">
-              <span>账号安全</span>
-              <b>›</b>
-            </button>
-            <button type="button" class="option-row">
+            <input id="recordsImportInput" type="file" accept=".json,.csv,text/csv,application/json" hidden />
+            <button type="button" class="option-row" data-profile-action="backup">
               <span>数据与备份</span>
               <b>›</b>
             </button>
@@ -358,9 +348,20 @@
           <label>账号<input id="profileAccountInput" disabled /></label>
           <label>昵称<input id="profileNameInput" maxlength="24" /></label>
           <label>出生日期<input id="profileBirthdayInput" type="date" /></label>
+          <label>旧密码<input id="profileCurrentPasswordInput" type="password" autocomplete="current-password" placeholder="修改密码时必填" /></label>
           <label>修改密码<input id="profilePasswordInput" type="password" autocomplete="new-password" minlength="6" placeholder="不修改可留空" /></label>
           <button id="saveProfileBtn" class="primary" type="button">保存</button>
           <p id="profileEditMessage" class="message"></p>
+        </div>
+      </section>
+
+      <section id="backupModal" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card backup-card">
+          <h2>数据与备份</h2>
+          <p>导出自己的体重记录，或从 CSV/JSON 文件导入记录。</p>
+          <button id="exportRecordsBtn" class="primary" type="button">导出我的记录</button>
+          <button id="importRecordsBtn" class="secondary-button" type="button">导入体重记录</button>
+          <button id="closeBackupBtn" class="secondary-button" type="button">返回</button>
         </div>
       </section>
 

@@ -265,6 +265,8 @@ function buildCompetition(db, date) {
     durationDays,
     daysLeft,
     isFinished: date >= endDate,
+    treatDone: Boolean(settings.treatDone),
+    treatDoneAt: settings.treatDoneAt || "",
     winner: ranked[0] || null,
     loser: ranked.length > 1 ? ranked[ranked.length - 1] : null
   };
@@ -484,6 +486,9 @@ async function handleApi(req, res, pathname) {
       if (body.password !== undefined && String(body.password || "").trim()) {
         const password = String(body.password);
         if (password.length < 6) return json(res, 400, { error: "密码至少 6 位" });
+        if (!body.currentPassword || !verifyPassword(String(body.currentPassword), user)) {
+          return json(res, 400, { error: "请先输入正确的旧密码" });
+        }
         const { salt, hash } = hashPassword(password);
         user.salt = salt;
         user.passwordHash = hash;
@@ -507,6 +512,15 @@ async function handleApi(req, res, pathname) {
         }
         settings.durationDays = durationDays;
       }
+      await writeDb(db);
+      return json(res, 200, { competition: privateCompetitionPayload(buildCompetition(db, todayInLocalDate())) });
+    }
+
+    if (req.method === "PATCH" && pathname === "/api/competition/treat") {
+      const body = await readBody(req);
+      const settings = ensureCompetitionSettings(db);
+      settings.treatDone = Boolean(body.done);
+      settings.treatDoneAt = settings.treatDone ? new Date().toISOString() : "";
       await writeDb(db);
       return json(res, 200, { competition: privateCompetitionPayload(buildCompetition(db, todayInLocalDate())) });
     }
@@ -537,6 +551,24 @@ async function handleApi(req, res, pathname) {
         leaderboard: competition.isFinished ? leaderboard : leaderboard.map((item) => maskLeaderboardItem(item, user.id)),
         competition: privateCompetitionPayload(competition)
       });
+    }
+
+    if (req.method === "POST" && pathname === "/api/records/import") {
+      const body = await readBody(req);
+      const records = Array.isArray(body.records) ? body.records : [];
+      if (!records.length) return json(res, 400, { error: "没有可导入的记录" });
+      if (records.length > 500) return json(res, 400, { error: "一次最多导入 500 条记录" });
+      let imported = 0;
+      for (const item of records) {
+        const date = String(item.date || "").slice(0, 10);
+        const weight = numberOrNull(item.weight);
+        if (!isDateText(date) || !weight || weight < 20 || weight > 400) continue;
+        upsertRecord(db, user.id, date, Number(weight.toFixed(2)), "", item.note || "");
+        imported += 1;
+      }
+      if (!imported) return json(res, 400, { error: "没有符合格式的记录" });
+      await writeDb(db);
+      return json(res, 201, { ok: true, imported, stats: userStats(db, user.id) });
     }
 
     const recordDeleteMatch = pathname.match(/^\/api\/records\/([^/]+)$/);
