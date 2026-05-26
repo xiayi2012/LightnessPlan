@@ -205,6 +205,19 @@ function closeProfileEdit() {
   closeModal("#profileEditModal");
 }
 
+function openTargetSettings() {
+  $("#targetStartInput").value = inputWeightFromKg(state.user?.startWeight);
+  $("#targetGoalInput").value = inputWeightFromKg(state.user?.targetWeight);
+  $("#targetStartLabel").textContent = `初始体重 ${unitName()}`;
+  $("#targetGoalLabel").textContent = `目标体重 ${unitName()}`;
+  $("#targetMessage").textContent = "";
+  openModal("#targetModal");
+}
+
+function closeTargetSettings() {
+  closeModal("#targetModal");
+}
+
 function openAvatarSource(event) {
   event?.preventDefault?.();
   event?.stopPropagation?.();
@@ -552,6 +565,7 @@ function formatRecordTime(value) {
 
 function renderLeaderboard() {
   renderCompetition();
+  renderCompetitionHistory();
   $("#leaderboard").innerHTML = state.leaderboard.length
     ? state.leaderboard.map((item, index) => {
       const description = rankDescription(item, index);
@@ -562,7 +576,7 @@ function renderLeaderboard() {
           <div class="rank-num">${index + 1}</div>
           ${rankAvatar(item.user)}
           <div>
-            <div class="rank-name">${escapeHtml(item.user.name)}${badge ? `<span class="rank-badge">${badge}</span>` : ""}</div>
+            <div class="rank-name">${escapeHtml(item.user.name)}${badge ? `<span class="rank-badge badge-${Math.min(index + 1, 4)}">${badge}</span>` : ""}</div>
             ${description ? `<div class="rank-meta">${description}</div>` : ""}
           </div>
           ${score ? `<div class="rank-score">${score}</div>` : ""}
@@ -570,6 +584,21 @@ function renderLeaderboard() {
       `;
     }).join("")
     : emptyState("还没有排行", rankMode === "totalLoss" ? "大家打卡后会在这里看到名次。" : "今日有两次对比记录后会产生排行。");
+}
+
+function renderCompetitionHistory() {
+  const history = $("#competitionHistory");
+  if (!history) return;
+  const items = state.competition?.history || [];
+  history.innerHTML = items.length
+    ? items.map((item) => `
+      <article class="history-item">
+        <span>${escapeHtml(item.startDate)} 至 ${escapeHtml(item.endDate)}</span>
+        <strong>冠军 ${escapeHtml(item.winner?.user?.name || "--")}</strong>
+        <p>请客 ${escapeHtml(item.loser?.user?.name || "--")} · ${item.treatDone ? "已请客" : "待请客"}</p>
+      </article>
+    `).join("")
+    : emptyState("还没有比赛历史", "本期比赛结束后会自动生成历史记录。");
 }
 
 function rankAvatar(user = {}) {
@@ -762,6 +791,25 @@ function renderStats() {
   $("#distanceToGoal").textContent = latest ? kg(Math.abs(latest.weight - state.user.targetWeight)) : "--";
   $("#avgChange").textContent = signedKg(average);
   $("#bestDay").textContent = signedKg(best);
+  $("#goalPrediction").textContent = predictGoalDate(records);
+}
+
+function predictGoalDate(records) {
+  if (records.length < 3) return "--";
+  const recent = records.slice(-7);
+  const first = recent[0];
+  const latest = recent[recent.length - 1];
+  const days = Math.max(1, dateDiffDays(first.date, latest.date));
+  const dailyLoss = (first.weight - latest.weight) / days;
+  const target = Number(state.user?.targetWeight);
+  if (!dailyLoss || dailyLoss <= 0 || !target || latest.weight <= target) return "保持即可";
+  const daysLeft = Math.ceil((latest.weight - target) / dailyLoss);
+  if (!Number.isFinite(daysLeft) || daysLeft > 365) return "暂不可测";
+  return `${daysLeft} 天后`;
+}
+
+function dateDiffDays(from, to) {
+  return Math.max(1, Math.ceil((new Date(`${to}T00:00:00`) - new Date(`${from}T00:00:00`)) / 86400000));
 }
 
 function renderCharts(records) {
@@ -786,9 +834,11 @@ function lineChartSvg(records) {
     <svg viewBox="0 0 ${width} ${height}" role="img" aria-label="体重折线图">
       <path class="chart-grid" d="M${padding} ${padding}H${width - padding}M${padding} ${height / 2}H${width - padding}M${padding} ${height - padding}H${width - padding}" />
       <polyline class="chart-line" points="${points.join(" ")}" />
-      ${points.map((point) => `<circle class="chart-dot" cx="${point.split(",")[0]}" cy="${point.split(",")[1]}" r="4" />`).join("")}
-      <text x="${padding}" y="18">${kg(max)}</text>
-      <text x="${padding}" y="${height - 6}">${kg(min)}</text>
+      ${points.map((point, index) => `<circle class="chart-dot" cx="${point.split(",")[0]}" cy="${point.split(",")[1]}" r="4"><title>${records[index].date} · ${kg(records[index].weight)}</title></circle>`).join("")}
+      <text class="chart-label" x="${padding}" y="18">${kg(max)}</text>
+      <text class="chart-label" x="${padding}" y="${height - 6}">${kg(min)}</text>
+      <text class="chart-date-label" x="${padding}" y="${height - 22}">${records[0].date.slice(5)}</text>
+      <text class="chart-date-label" x="${width - padding - 36}" y="${height - 22}">${records[records.length - 1].date.slice(5)}</text>
     </svg>
   `;
 }
@@ -1089,6 +1139,7 @@ document.querySelectorAll("[data-profile-action]").forEach((button) => {
   button.addEventListener("click", () => {
     if (button.dataset.profileAction === "profile") openProfileEdit();
     if (button.dataset.profileAction === "competition") switchPage("competitionSettings");
+    if (button.dataset.profileAction === "target") openTargetSettings();
     if (button.dataset.profileAction === "rules") openModal("#rulesModal");
     if (button.dataset.profileAction === "backup") openModal("#backupModal");
   });
@@ -1156,6 +1207,28 @@ recordsImportInput?.addEventListener("change", () => {
 });
 $("#profileEditModal").addEventListener("click", (event) => {
   if (event.target.id === "profileEditModal") closeProfileEdit();
+});
+
+$("#saveTargetBtn")?.addEventListener("click", async () => {
+  const message = $("#targetMessage");
+  message.textContent = "";
+  try {
+    const payload = {
+      startWeight: inputWeightToKg($("#targetStartInput").value),
+      targetWeight: inputWeightToKg($("#targetGoalInput").value)
+    };
+    const data = await api("/api/me", { method: "PATCH", body: JSON.stringify(payload) });
+    state.user = data.user;
+    state.stats = data.stats;
+    closeTargetSettings();
+    renderShell();
+    renderStats();
+  } catch (error) {
+    message.textContent = error.message;
+  }
+});
+$("#targetModal")?.addEventListener("click", (event) => {
+  if (event.target.id === "targetModal") closeTargetSettings();
 });
 
 $("#exportRecordsBtn")?.addEventListener("click", exportMyRecords);

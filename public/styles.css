@@ -542,6 +542,18 @@ input:focus {
   stroke-width: 3;
 }
 
+.chart-label,
+.chart-date-label {
+  paint-order: stroke;
+  stroke: var(--surface);
+  stroke-width: 3;
+}
+
+.chart-date-label {
+  fill: var(--accent-deep);
+  font-size: 11px;
+}
+
 .rank-tabs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -831,6 +843,26 @@ input:focus {
   vertical-align: 1px;
 }
 
+.badge-1 {
+  background: #fff3bf;
+  color: #9a6500;
+}
+
+.badge-2 {
+  background: #f1eee9;
+  color: #6f625c;
+}
+
+.badge-3 {
+  background: #ffe2d7;
+  color: var(--accent-deep);
+}
+
+.badge-4 {
+  background: #eee8e2;
+  color: #8b7a72;
+}
+
 .rank-name,
 .record-title {
   font-weight: 900;
@@ -1098,7 +1130,19 @@ input:focus {
 
 .option-panel {
   display: grid;
-  gap: 8px;
+  gap: 10px;
+  padding: 10px;
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.option-row {
+  border-radius: 8px;
+  background: rgba(255, 250, 247, 0.9);
+  box-shadow: 0 8px 18px rgba(115, 72, 52, 0.05);
+}
+
+.option-row:active {
+  transform: scale(0.99);
 }
 
 .competition-settings {
@@ -1218,17 +1262,65 @@ input:focus {
 }
 
 .empty::before {
-  content: "+";
+  content: "";
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 34px;
+  width: 42px;
+  height: 42px;
   margin: 0 auto 2px;
   border-radius: 50%;
   background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 22px;
-  font-weight: 900;
+  box-shadow:
+    inset 0 -10px 0 rgba(233, 130, 110, 0.12),
+    0 8px 18px rgba(115, 72, 52, 0.08);
+}
+
+.empty::after {
+  content: "";
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 6px;
+  margin: -31px auto 22px;
+  border-radius: 999px;
+  background: currentColor;
+  box-shadow: 0 12px 0 currentColor;
+  opacity: 0.28;
+}
+
+.history-list {
+  display: grid;
+  gap: 10px;
+}
+
+.history-item {
+  padding: 13px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  box-shadow: var(--soft-shadow);
+}
+
+.history-item span,
+.history-item p {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.history-item strong {
+  display: block;
+  margin: 6px 0;
+  font-size: 18px;
+}
+
+.chart-dot {
+  transition: r 0.18s ease, filter 0.18s ease;
+}
+
+.chart-dot:hover {
+  r: 6;
+  filter: drop-shadow(0 4px 8px rgba(233, 130, 110, 0.32));
 }
 
 .empty strong {

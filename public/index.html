@@ -138,6 +138,10 @@
                 <span>最佳单日</span>
                 <strong id="bestDay">--</strong>
               </article>
+              <article>
+                <span>预计达标</span>
+                <strong id="goalPrediction">--</strong>
+              </article>
             </div>
           </section>
 
@@ -213,6 +217,13 @@
             </div>
             <div id="leaderboard" class="rank-list"></div>
           </section>
+
+          <section class="panel">
+            <div class="panel-heading">
+              <h2>比赛历史</h2>
+            </div>
+            <div id="competitionHistory" class="history-list"></div>
+          </section>
         </section>
 
         <section class="app-page" data-page="profile">
@@ -240,7 +251,7 @@
               <span>比赛设置</span>
               <b>›</b>
             </button>
-            <button type="button" class="option-row">
+            <button type="button" class="option-row" data-profile-action="target">
               <span>目标设置</span>
               <b>›</b>
             </button>
@@ -352,6 +363,16 @@
           <label>修改密码<input id="profilePasswordInput" type="password" autocomplete="new-password" minlength="6" placeholder="不修改可留空" /></label>
           <button id="saveProfileBtn" class="primary" type="button">保存</button>
           <p id="profileEditMessage" class="message"></p>
+        </div>
+      </section>
+
+      <section id="targetModal" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card">
+          <h2>目标设置</h2>
+          <label><span id="targetStartLabel">初始体重</span><input id="targetStartInput" type="number" min="20" max="800" step="0.1" /></label>
+          <label><span id="targetGoalLabel">目标体重</span><input id="targetGoalInput" type="number" min="20" max="800" step="0.1" /></label>
+          <button id="saveTargetBtn" class="primary" type="button">保存目标</button>
+          <p id="targetMessage" class="message"></p>
         </div>
       </section>
 

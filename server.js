@@ -248,7 +248,33 @@ function ensureCompetitionSettings(db, fallbackDate = todayInLocalDate()) {
   if (!isDateText(settings.startDate)) settings.startDate = earliestRecordDate(db, fallbackDate);
   const durationDays = Number(settings.durationDays);
   settings.durationDays = Number.isInteger(durationDays) && durationDays >= 1 && durationDays <= 365 ? durationDays : 30;
+  settings.history = Array.isArray(settings.history) ? settings.history : [];
   return settings;
+}
+
+function createCompetitionHistoryItem(db, settings, date) {
+  const startDate = settings.startDate;
+  const durationDays = settings.durationDays;
+  const endDate = addDays(startDate, durationDays - 1);
+  if (date < endDate) return null;
+  const ranked = buildLeaderboard(db, date, "totalLoss").filter((item) => item.firstWeight !== null);
+  if (!ranked.length) return null;
+  return {
+    id: `${startDate}_${endDate}`,
+    startDate,
+    endDate,
+    winner: ranked[0] || null,
+    loser: ranked.length > 1 ? ranked[ranked.length - 1] : null,
+    treatDone: Boolean(settings.treatDone),
+    treatDoneAt: settings.treatDoneAt || ""
+  };
+}
+
+function appendCompetitionHistory(db, date) {
+  const settings = ensureCompetitionSettings(db, date);
+  const item = createCompetitionHistoryItem(db, settings, date);
+  if (!item || settings.history.some((historyItem) => historyItem.id === item.id)) return;
+  settings.history = [...settings.history, item].slice(-12);
 }
 
 function buildCompetition(db, date) {
@@ -259,6 +285,9 @@ function buildCompetition(db, date) {
   const daysLeft = Math.max(0, dateDiffInDays(date, endDate));
   const totalRanking = buildLeaderboard(db, date, "totalLoss");
   const ranked = totalRanking.filter((item) => item.firstWeight !== null);
+  const currentHistory = createCompetitionHistoryItem(db, settings, date);
+  const history = [...settings.history];
+  if (currentHistory && !history.some((item) => item.id === currentHistory.id)) history.push(currentHistory);
   return {
     startDate,
     endDate,
@@ -267,6 +296,7 @@ function buildCompetition(db, date) {
     isFinished: date >= endDate,
     treatDone: Boolean(settings.treatDone),
     treatDoneAt: settings.treatDoneAt || "",
+    history: history.slice(-12).reverse(),
     winner: ranked[0] || null,
     loser: ranked.length > 1 ? ranked[ranked.length - 1] : null
   };
@@ -483,6 +513,14 @@ async function handleApi(req, res, pathname) {
         if (birthday && !isDateText(birthday)) return json(res, 400, { error: "出生日期格式不正确" });
         user.birthday = birthday;
       }
+      if (body.startWeight !== undefined || body.targetWeight !== undefined) {
+        const startWeight = body.startWeight !== undefined ? numberOrNull(body.startWeight) : user.startWeight;
+        const targetWeight = body.targetWeight !== undefined ? numberOrNull(body.targetWeight) : user.targetWeight;
+        if (!startWeight || startWeight < 20 || startWeight > 400) return json(res, 400, { error: "初始体重需在 20-400kg 之间" });
+        if (!targetWeight || targetWeight < 20 || targetWeight > 400) return json(res, 400, { error: "目标体重需在 20-400kg 之间" });
+        user.startWeight = Number(startWeight.toFixed(2));
+        user.targetWeight = Number(targetWeight.toFixed(2));
+      }
       if (body.password !== undefined && String(body.password || "").trim()) {
         const password = String(body.password);
         if (password.length < 6) return json(res, 400, { error: "密码至少 6 位" });
@@ -500,6 +538,7 @@ async function handleApi(req, res, pathname) {
     if (req.method === "PATCH" && pathname === "/api/competition") {
       const body = await readBody(req);
       const settings = ensureCompetitionSettings(db);
+      appendCompetitionHistory(db, todayInLocalDate());
       if (body.startDate !== undefined) {
         const startDate = String(body.startDate || "").slice(0, 10);
         if (!isDateText(startDate)) return json(res, 400, { error: "比赛开始日期格式不正确" });
