@@ -24,7 +24,7 @@ const avatarCameraInput = $("#avatarCameraInput");
 const recordsImportInput = $("#recordsImportInput");
 const avatarCanvas = $("#avatarCanvas");
 const avatarZoom = $("#avatarZoom");
-let rankMode = "totalLoss";
+let rankMode = "dailyPercent";
 let currentPage = "home";
 let previousPageBeforeCheckin = "home";
 let editingRecordId = null;
@@ -265,10 +265,14 @@ function renderShell() {
   authView.classList.add("hidden");
   dashboardView.classList.remove("hidden");
   $("#helloTitle").textContent = `${state.user.name}，今天继续向目标靠近`;
+  $("#homeStartWeight").textContent = kg(state.user.startWeight);
   $("#latestWeight").textContent = kg(state.stats.latestWeight);
   $("#homeLatestWeight").textContent = kg(state.stats.latestWeight);
   $("#totalLoss").textContent = cumulativeKg(state.stats.totalLoss);
   $("#targetWeight").textContent = kg(state.user.targetWeight);
+  const startWeight = Number(state.user?.startWeight);
+  const totalLoss = Number(state.stats?.totalLoss || 0);
+  $("#homeLossPercent").textContent = startWeight > 0 ? `${Math.max(0, (totalLoss / startWeight) * 100).toFixed(2)}%` : "--";
   $("#recordDays").textContent = `${state.stats.totalRecords} 天`;
   $("#profileName").textContent = state.user.name;
   $("#profileBirthday").textContent = state.user.birthday ? `出生日期 ${state.user.birthday}` : "点击编辑完善资料";
@@ -516,6 +520,7 @@ function openRecordDetail(record, ownerName = "") {
   $("#detailWeightInput").value = inputWeightFromKg(record.weight);
   $("#detailNoteInput").value = record.note || "";
   $("#detailTime").textContent = formatRecordTime(record.createdAt);
+  $("#detailUpdatedTime").textContent = record.updatedAt ? formatRecordTime(record.updatedAt) : "未修改";
   $("#detailOwner").textContent = ownerName || "";
   $("#detailOwnerRow").classList.toggle("hidden", !ownerName);
   $("#detailWeightLabel").textContent = state.unit === "jin" ? "体重 斤" : "体重 kg";
@@ -543,7 +548,8 @@ async function saveRecordDetail() {
       await api(`/api/records/${encodeURIComponent(originalRecord.id)}`, { method: "DELETE" });
     }
     closeRecordDetail();
-    await refreshAfterRecordChange();
+    const isFirstRank = await refreshAfterRecordChange();
+    if (isFirstRank) showFirstRankConfetti();
   } catch (error) {
     message.textContent = error.message;
   }
@@ -567,8 +573,6 @@ function renderLeaderboard() {
   renderCompetitionHistory();
   $("#leaderboard").innerHTML = state.leaderboard.length
     ? state.leaderboard.map((item, index) => {
-      const description = rankDescription(item, index);
-      const score = rankScore(item);
       const badge = rankBadge(item, index);
       return `
         <article class="rank-item ${item.own ? "own-rank" : ""}">
@@ -576,9 +580,7 @@ function renderLeaderboard() {
           ${rankAvatar(item.user)}
           <div>
             <div class="rank-name">${escapeHtml(item.user.name)}${badge ? `<span class="rank-badge badge-${Math.min(index + 1, 4)}">${badge}</span>` : ""}</div>
-            ${description ? `<div class="rank-meta">${description}</div>` : ""}
           </div>
-          ${score ? `<div class="rank-score">${score}</div>` : ""}
         </article>
       `;
     }).join("")
@@ -639,27 +641,23 @@ function renderCompetition() {
       ? `${Number(competition.loser.totalPercent || 0).toFixed(2)}% · ${signedKg(competition.loser.totalLoss)}`
       : ""
     : "--";
-  const ownIndex = state.leaderboard.findIndex((item) => item.own);
-  const ownRank = ownIndex >= 0 ? ownIndex + 1 : null;
-  $("#homeRankText").textContent = ownIndex >= 0 ? `第 ${ownIndex + 1} 名` : "--";
-  const rankHint = $("#homeRankHint");
-  if (rankHint) {
-    if (!ownRank) {
-      rankHint.textContent = "今天打卡后加入排行榜";
-    } else if (ownRank === 1) {
-      rankHint.textContent = "今天暂时领先，稳住这个节奏";
-    } else if (ownRank <= 3) {
-      rankHint.textContent = "距离榜首很近，再坚持一下";
-    } else {
-      rankHint.textContent = "继续打卡，排名会更好看";
-    }
-  }
+  renderHomeRankBadge();
   const treatButton = $("#treatDoneBtn");
   if (treatButton) {
     treatButton.classList.toggle("hidden", !competition.isFinished || !competition.loser);
     treatButton.textContent = competition.treatDone ? "已请客" : "标记已请客";
   }
   renderCompetitionSettings();
+}
+
+function renderHomeRankBadge() {
+  const badge = $("#homeRankBadge");
+  if (!badge) return;
+  const ownIndex = state.leaderboard.findIndex((item) => item.own);
+  const rank = ownIndex >= 0 ? ownIndex + 1 : null;
+  const rankClass = rank === 1 ? "rank-1" : rank === 2 ? "rank-2" : rank === 3 ? "rank-3" : rank ? "rank-other" : "rank-none";
+  badge.className = `home-rank-medal ${rankClass}`;
+  badge.innerHTML = `<span>今日</span><strong>${rank ? `第${rank}名` : "--"}</strong>`;
 }
 
 function renderCompetitionSettings() {
@@ -669,19 +667,6 @@ function renderCompetitionSettings() {
   if (!competition || !startInput || !durationInput) return;
   startInput.value = competition.startDate || today;
   durationInput.value = competition.durationDays || 30;
-}
-
-function rankDescription(item, index) {
-  if (item.hidden) {
-    return "";
-  }
-  if (item.own || state.competition?.isFinished) return `当前体重 ${kg(item.weight)} · 减重比例 ${Number(item.totalPercent ?? 0).toFixed(2)}%`;
-  return "";
-}
-
-function rankScore(item) {
-  if (item.hidden || (!item.own && !state.competition?.isFinished)) return "";
-  return `${kg(item.weight)}<br><span>${Number(item.totalPercent ?? 0).toFixed(2)}%</span>`;
 }
 
 async function exportRankReport() {
@@ -803,13 +788,6 @@ function renderGoalProgress() {
 function renderStats() {
   const records = [...state.records].sort((a, b) => a.date.localeCompare(b.date));
   renderCharts(records);
-  const first = records[0];
-  const latest = records[records.length - 1];
-  const average = records.length > 1 ? Number((state.stats.totalLoss / (records.length - 1)).toFixed(1)) : 0;
-  $("#firstWeight").textContent = kg(first?.weight);
-  $("#distanceToGoal").textContent = latest ? kg(Math.abs(latest.weight - state.user.targetWeight)) : "--";
-  $("#avgChange").textContent = signedKg(average);
-  $("#goalPrediction").textContent = predictGoalDate(records);
 }
 
 function predictGoalDate(records) {
@@ -904,6 +882,8 @@ async function refreshAll() {
 async function refreshAfterRecordChange() {
   if (rankDate) rankDate.value = today;
   await refreshAll();
+  const daily = await fetchLeaderboard(today, "dailyPercent");
+  return Boolean(daily.allCheckedToday) && daily.leaderboard.findIndex((item) => item.own) === 0;
 }
 
 function fetchLeaderboard(date = today, mode = rankMode) {
@@ -913,6 +893,31 @@ function fetchLeaderboard(date = today, mode = rankMode) {
     _: String(Date.now())
   });
   return api(`/api/leaderboard?${params.toString()}`);
+}
+
+function showFirstRankConfetti() {
+  const oldLayer = document.querySelector(".confetti-layer");
+  oldLayer?.remove();
+  const layer = document.createElement("div");
+  layer.className = "confetti-layer";
+  layer.setAttribute("aria-hidden", "true");
+  const card = document.createElement("div");
+  card.className = "confetti-card";
+  card.innerHTML = "<b>NO.1</b><strong>第一名</strong><span>今天状态很顶，继续稳住</span>";
+  layer.appendChild(card);
+  const colors = ["#f4c15d", "#e9826e", "#ffd98a", "#ffffff", "#d86e5d"];
+  for (let index = 0; index < 72; index += 1) {
+    const piece = document.createElement("i");
+    piece.style.setProperty("--x", `${Math.random() * 100}vw`);
+    piece.style.setProperty("--delay", `${Math.random() * 0.52}s`);
+    piece.style.setProperty("--duration", `${2.15 + Math.random() * 1.05}s`);
+    piece.style.setProperty("--rotate", `${Math.random() * 360}deg`);
+    piece.style.background = colors[index % colors.length];
+    piece.className = index % 3 === 0 ? "round" : "";
+    layer.appendChild(piece);
+  }
+  document.body.appendChild(layer);
+  window.setTimeout(() => layer.remove(), 3800);
 }
 
 document.querySelectorAll("[data-auth-tab]").forEach((button) => {
@@ -1103,8 +1108,9 @@ $("#recordForm").addEventListener("submit", async (event) => {
     const wasEditing = Boolean(editingRecordId);
     recordMessage.textContent = wasEditing ? "已修改。" : "已保存，排行榜刷新了。";
     resetRecordForm();
-    await refreshAfterRecordChange();
+    const isFirstRank = await refreshAfterRecordChange();
     switchPage(wasEditing ? (previousPageBeforeCheckin || "home") : "rank");
+    if (isFirstRank) showFirstRankConfetti();
   } catch (error) {
     recordMessage.textContent = error.message;
   }

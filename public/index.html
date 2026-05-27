@@ -72,21 +72,22 @@
 
         <section class="app-page active" data-page="home">
           <section class="hero-card">
+            <div id="homeRankBadge" class="home-rank-medal rank-none">
+              <span>今日</span>
+              <strong>--</strong>
+            </div>
             <p id="helloTitle">你好</p>
             <strong id="homeLatestWeight">--</strong>
             <span id="homeProgressText">距离目标还有 --</span>
             <div class="progress-track"><div id="goalProgress" class="progress-fill"></div></div>
           </section>
 
-          <section class="home-race-card">
-            <div class="home-rank-content">
-              <span>今日排名</span>
-              <strong id="homeRankText">--</strong>
-              <p id="homeRankHint">打卡后参与今日 PK</p>
-            </div>
-          </section>
-
           <section class="stats-grid" aria-label="个人概览">
+            <article class="stat">
+              <span class="ui-icon icon-scale" aria-hidden="true"></span>
+              <span>起始体重</span>
+              <strong id="homeStartWeight">--</strong>
+            </article>
             <article class="stat">
               <span class="ui-icon icon-scale" aria-hidden="true"></span>
               <span>当前体重</span>
@@ -101,6 +102,11 @@
               <span class="ui-icon icon-target" aria-hidden="true"></span>
               <span>目标体重</span>
               <strong id="targetWeight">--</strong>
+            </article>
+            <article class="stat">
+              <span class="ui-icon icon-pulse" aria-hidden="true"></span>
+              <span>减重比例</span>
+              <strong id="homeLossPercent">--</strong>
             </article>
             <article class="stat">
               <span class="ui-icon icon-calendar" aria-hidden="true"></span>
@@ -118,30 +124,6 @@
         </section>
 
         <section class="app-page" data-page="stats">
-          <section class="panel">
-            <div class="panel-heading">
-              <h2><span class="heading-icon icon-pulse" aria-hidden="true"></span>数据统计</h2>
-            </div>
-            <div class="insight-grid">
-              <article>
-                <span>起始体重</span>
-                <strong id="firstWeight">--</strong>
-              </article>
-              <article>
-                <span>距目标</span>
-                <strong id="distanceToGoal">--</strong>
-              </article>
-              <article>
-                <span>平均变化</span>
-                <strong id="avgChange">--</strong>
-              </article>
-              <article>
-                <span>预计达标</span>
-                <strong id="goalPrediction">--</strong>
-              </article>
-            </div>
-          </section>
-
           <section class="panel">
             <div class="panel-heading">
               <h2><span class="heading-icon icon-trend" aria-hidden="true"></span>体重趋势</h2>
@@ -165,6 +147,13 @@
         <section class="app-page" data-page="checkin">
           <form id="recordForm" class="panel record-panel">
             <label>日期<input id="recordDate" name="date" type="date" required /></label>
+            <div class="checkin-unit-row">
+              <span><span class="setting-icon icon-unit" aria-hidden="true"></span>体重单位</span>
+              <div class="unit-toggle" role="group" aria-label="打卡体重单位">
+                <button type="button" class="unit-button" data-unit="kg">kg</button>
+                <button type="button" class="unit-button active" data-unit="jin">斤</button>
+              </div>
+            </div>
             <label><span id="recordWeightLabel">体重 kg</span><input id="recordWeightInput" name="weight" type="number" min="20" max="800" step="0.1" required /></label>
             <label>备注<input name="note" maxlength="120" /></label>
             <div class="record-actions-row">
@@ -208,8 +197,8 @@
               <h2>排行榜</h2>
             </div>
             <div class="rank-tabs" role="tablist" aria-label="排行榜排序">
-              <button class="rank-tab" type="button" data-rank-mode="dailyPercent">今日排行</button>
-              <button class="rank-tab active" type="button" data-rank-mode="totalLoss">总排行</button>
+              <button class="rank-tab active" type="button" data-rank-mode="dailyPercent">今日排行</button>
+              <button class="rank-tab" type="button" data-rank-mode="totalLoss">总排行</button>
             </div>
             <div id="leaderboard" class="rank-list"></div>
           </section>
@@ -370,6 +359,10 @@
             <div class="detail-readonly">
               <span>记录时间</span>
               <strong id="detailTime">--</strong>
+            </div>
+            <div class="detail-readonly">
+              <span>修改时间</span>
+              <strong id="detailUpdatedTime">未修改</strong>
             </div>
             <div id="detailOwnerRow" class="detail-readonly hidden">
               <span>成员</span>

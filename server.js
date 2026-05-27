@@ -632,9 +632,14 @@ async function handleApi(req, res, pathname) {
       const mode = url.searchParams.get("mode") || "totalLoss";
       const competition = buildCompetition(db, date);
       const leaderboard = buildLeaderboard(db, date, mode);
+      const todayRecordUserIds = new Set(db.records.filter((record) => record.date === date).map((record) => record.userId));
+      const checkedTodayCount = db.users.filter((item) => todayRecordUserIds.has(item.id)).length;
       return json(res, 200, {
         date,
         mode,
+        checkedTodayCount,
+        participantsTotal: db.users.length,
+        allCheckedToday: db.users.length > 0 && checkedTodayCount === db.users.length,
         leaderboard: competition.isFinished ? leaderboard : leaderboard.map((item) => maskLeaderboardItem(item, user.id)),
         competition: privateCompetitionPayload(competition)
       });
