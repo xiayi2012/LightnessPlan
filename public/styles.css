@@ -347,34 +347,39 @@ input:focus {
   top: 16px;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(2, 62px);
+  grid-template-columns: repeat(2, 46px);
   place-items: center;
-  gap: 0;
-  min-width: 140px;
-  min-height: 58px;
-  padding: 8px;
+  gap: 4px;
+  min-width: 104px;
+  min-height: 42px;
+  padding: 4px;
   border: 1px solid rgba(240, 221, 211, 0.9);
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.96);
   box-shadow: var(--soft-shadow);
+  overflow: hidden;
 }
 
 .home-rank-medal div {
   display: grid;
   place-items: center;
-  width: 62px;
-  min-width: 62px;
-  min-height: 42px;
+  width: 46px;
+  min-width: 46px;
+  height: 34px;
+  min-height: 34px;
+  border: 1px solid rgba(240, 221, 211, 0.72);
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .home-rank-medal div + div {
-  border-left: 1px solid rgba(115, 72, 52, 0.12);
+  border-left: 0;
 }
 
 .home-rank-medal span {
   margin: 0;
   color: inherit;
-  font-size: 11px;
+  font-size: 9px;
   font-weight: 900;
   line-height: 1;
 }
@@ -382,12 +387,12 @@ input:focus {
 .home-rank-medal strong {
   margin-top: 5px;
   color: inherit;
-  font-size: 16px;
+  font-size: 12px;
   font-weight: 950;
   line-height: 1;
 }
 
-.home-rank-medal.rank-1 {
+.home-rank-medal .rank-1 {
   border-color: rgba(244, 193, 93, 0.75);
   background:
     radial-gradient(circle at 82% 12%, rgba(255, 232, 133, 0.92), transparent 38%),
@@ -395,7 +400,7 @@ input:focus {
   color: #7a4f00;
 }
 
-.home-rank-medal.rank-2 {
+.home-rank-medal .rank-2 {
   border-color: rgba(139, 122, 114, 0.32);
   background:
     radial-gradient(circle at 82% 12%, rgba(242, 238, 234, 0.98), transparent 38%),
@@ -403,7 +408,7 @@ input:focus {
   color: #6f625c;
 }
 
-.home-rank-medal.rank-3 {
+.home-rank-medal .rank-3 {
   border-color: rgba(233, 130, 110, 0.32);
   background:
     radial-gradient(circle at 82% 12%, rgba(255, 205, 188, 0.82), transparent 38%),
@@ -411,10 +416,16 @@ input:focus {
   color: var(--accent-deep);
 }
 
-.home-rank-medal.rank-other {
+.home-rank-medal .rank-other {
   border-color: rgba(233, 130, 110, 0.2);
   background: var(--accent-soft);
   color: var(--accent);
+}
+
+.home-rank-medal .rank-none {
+  border-color: rgba(240, 221, 211, 0.72);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--muted);
 }
 
 .hero-card span {
@@ -427,14 +438,14 @@ input:focus {
 .hero-card .home-rank-medal span {
   margin: 0;
   color: inherit;
-  font-size: 11px;
+  font-size: 9px;
   line-height: 1;
 }
 
 .hero-card .home-rank-medal strong {
-  margin-top: 5px;
+  margin-top: 3px;
   color: inherit;
-  font-size: 16px;
+  font-size: 12px;
   line-height: 1;
 }
 

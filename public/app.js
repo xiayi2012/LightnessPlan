@@ -265,7 +265,7 @@ function renderShell() {
   }
   authView.classList.add("hidden");
   dashboardView.classList.remove("hidden");
-  $("#helloTitle").textContent = `${state.user.name}，今天继续向目标靠近`;
+  $("#helloTitle").textContent = `${state.user.name}，今天也要加油哦！`;
   $("#homeStartWeight").textContent = kg(state.user.startWeight);
   $("#latestWeight").textContent = kg(state.stats.latestWeight);
   $("#homeLatestWeight").textContent = kg(state.stats.latestWeight);
@@ -668,11 +668,11 @@ function renderHomeRankBadge() {
   const totalIndex = state.totalLeaderboard.findIndex((item) => item.own);
   const todayRank = todayIndex >= 0 ? todayIndex + 1 : null;
   const totalRank = totalIndex >= 0 ? totalIndex + 1 : null;
-  const rankClass = todayRank === 1 ? "rank-1" : todayRank === 2 ? "rank-2" : todayRank === 3 ? "rank-3" : todayRank ? "rank-other" : "rank-none";
-  badge.className = `home-rank-medal ${rankClass}`;
+  const rankClass = (rank) => rank === 1 ? "rank-1" : rank === 2 ? "rank-2" : rank === 3 ? "rank-3" : rank ? "rank-other" : "rank-none";
+  badge.className = "home-rank-medal";
   badge.innerHTML = `
-    <div><span>今日</span><strong>${todayRank ? `第${todayRank}名` : "--"}</strong></div>
-    <div><span>总榜</span><strong>${totalRank ? `第${totalRank}名` : "--"}</strong></div>
+    <div class="${rankClass(todayRank)}"><span>今日</span><strong>${todayRank ? `第${todayRank}名` : "--"}</strong></div>
+    <div class="${rankClass(totalRank)}"><span>总榜</span><strong>${totalRank ? `第${totalRank}名` : "--"}</strong></div>
   `;
 }
 
