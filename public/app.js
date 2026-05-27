@@ -576,14 +576,17 @@ function renderLeaderboard() {
     ? state.leaderboard.map((item, index) => {
       const badge = rankBadge(item, index);
       const percent = rankPercent(item);
+      const trendClass = rankTrendClass(item);
+      const progress = rankProgressWidth(item);
       return `
-        <article class="rank-item ${item.own ? "own-rank" : ""}">
+        <article class="rank-item ${trendClass} ${item.own ? "own-rank" : ""}">
           <div class="rank-num">${index + 1}</div>
           ${rankAvatar(item.user)}
-          <div>
+          <div class="rank-person">
             <div class="rank-name">${escapeHtml(item.user.name)}${badge ? `<span class="rank-badge badge-${Math.min(index + 1, 4)}">${badge}</span>` : ""}</div>
           </div>
           <div class="rank-score">${percent}</div>
+          <div class="rank-progress" style="--rank-progress:${progress}%"><span></span></div>
         </article>
       `;
     }).join("")
@@ -620,11 +623,27 @@ function rankBadge(item, index) {
 }
 
 function rankPercent(item) {
-  const value = rankMode === "dailyPercent" ? item.percent : item.totalPercent;
+  const value = rankPercentValue(item);
   const number = Number(value);
   if (!Number.isFinite(number)) return "--";
   const arrow = number > 0 ? "↓" : number < 0 ? "↑" : "→";
   return `${arrow} ${Math.abs(number).toFixed(2)}%`;
+}
+
+function rankTrendClass(item) {
+  const number = Number(rankPercentValue(item));
+  if (!Number.isFinite(number) || number === 0) return "rank-flat";
+  return number < 0 ? "rank-gain" : "rank-loss";
+}
+
+function rankPercentValue(item) {
+  return rankMode === "dailyPercent" ? item.percent : item.totalPercent;
+}
+
+function rankProgressWidth(item) {
+  const number = Math.abs(Number(rankPercentValue(item)));
+  if (!Number.isFinite(number) || number <= 0) return 6;
+  return Math.max(8, Math.min(100, number * 8));
 }
 
 function renderCompetition() {
@@ -636,28 +655,9 @@ function renderCompetition() {
   $("#raceDaysLeft").textContent = competition.isFinished ? "0" : competition.daysLeft;
   $("#desktopRaceDays").textContent = competition.isFinished ? "比赛已结束" : `剩余 ${competition.daysLeft} 天`;
   $("#desktopLeaderText").textContent = competition.isFinished
-    ? `获胜者 ${competition.winner?.user?.name || "--"}，请客候选 ${competition.loser?.user?.name || "--"}`
-    : `当前第一 ${competition.winner?.user?.name || "--"}，请客候选 ${competition.loser?.user?.name || "--"}`;
-  $("#winnerLabel").textContent = competition.isFinished ? "获胜者" : "当前第一";
-  $("#loserLabel").textContent = competition.isFinished ? "请客吃饭" : "请客候选";
-  $("#winnerName").textContent = competition.winner?.user?.name || "--";
-  $("#winnerScore").textContent = competition.winner
-    ? competition.isFinished
-      ? `${Number(competition.winner.totalPercent || 0).toFixed(2)}% · ${signedKg(competition.winner.totalLoss)}`
-      : ""
-    : "--";
-  $("#loserName").textContent = competition.loser?.user?.name || "--";
-  $("#loserScore").textContent = competition.loser
-    ? competition.isFinished
-      ? `${Number(competition.loser.totalPercent || 0).toFixed(2)}% · ${signedKg(competition.loser.totalLoss)}`
-      : ""
-    : "--";
+    ? "比赛已结束，最终排名可在排行榜查看。"
+    : "排行数据会保护隐私，比赛结束后再公开具体数值。";
   renderHomeRankBadge();
-  const treatButton = $("#treatDoneBtn");
-  if (treatButton) {
-    treatButton.classList.toggle("hidden", !competition.isFinished || !competition.loser);
-    treatButton.textContent = competition.treatDone ? "已请客" : "标记已请客";
-  }
   renderCompetitionSettings();
 }
 
@@ -1157,13 +1157,6 @@ $("#competitionForm").addEventListener("submit", async (event) => {
   } catch (error) {
     message.textContent = error.message;
   }
-});
-
-$("#treatDoneBtn")?.addEventListener("click", async () => {
-  const done = !state.competition?.treatDone;
-  const data = await api("/api/competition/treat", { method: "PATCH", body: JSON.stringify({ done }) });
-  state.competition = data.competition;
-  renderCompetition();
 });
 
 $("#logoutBtn").addEventListener("click", () => openModal("#logoutConfirmModal"));
