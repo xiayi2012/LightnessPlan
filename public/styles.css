@@ -41,8 +41,11 @@ body {
     linear-gradient(180deg, #fff4eb 0, #fffaf6 280px, #fff8f3 100%),
     var(--bg);
   color: var(--ink);
-  font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
   overscroll-behavior-y: contain;
   -webkit-tap-highlight-color: transparent;
@@ -227,7 +230,7 @@ input:focus {
   border-radius: 8px;
   background: linear-gradient(135deg, #f08f78, #d86e5d);
   color: #fff;
-  font-weight: 900;
+  font-weight: 700;
   box-shadow: 0 12px 22px rgba(216, 110, 93, 0.22);
 }
 
@@ -235,7 +238,7 @@ input:focus {
   min-height: 22px;
   margin: 10px 0 0;
   color: var(--accent-2);
-  font-weight: 800;
+  font-weight: 500;
   line-height: 1.45;
 }
 
@@ -331,7 +334,7 @@ input:focus {
 .hero-card p {
   margin: 0 0 10px;
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .hero-card strong {
@@ -380,7 +383,7 @@ input:focus {
   margin: 0;
   color: inherit;
   font-size: 9px;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.1;
   opacity: 0.78;
 }
@@ -389,16 +392,45 @@ input:focus {
   margin-top: 3px;
   color: inherit;
   font-size: 12px;
-  font-weight: 950;
+  font-weight: 700;
   line-height: 1.1;
 }
 
 .home-rank-medal .rank-1 {
+  position: relative;
   border-color: rgba(244, 193, 93, 0.5);
   background:
     radial-gradient(circle at 82% 12%, rgba(255, 232, 133, 0.58), transparent 38%),
     linear-gradient(135deg, #fffdfa 0%, #fff2c7 100%);
   color: #7a4f00;
+  box-shadow:
+    0 8px 16px rgba(244, 193, 93, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.86);
+}
+
+.home-rank-medal .rank-1::before {
+  content: "";
+  position: absolute;
+  inset: -14px auto -14px -34px;
+  width: 24px;
+  transform: rotate(22deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.78), transparent);
+  animation: bling-sweep 2.8s ease-in-out infinite;
+}
+
+.home-rank-medal .rank-1::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  top: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff8ce;
+  box-shadow:
+    -20px 16px 0 rgba(255, 248, 206, 0.72),
+    -10px -2px 0 rgba(255, 255, 255, 0.86);
+  animation: bling-dot 1.8s ease-in-out infinite;
 }
 
 .home-rank-medal .rank-2 {
@@ -435,7 +467,7 @@ input:focus {
   display: block;
   margin-top: 12px;
   color: var(--muted);
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .hero-card .home-rank-medal span {
@@ -810,7 +842,7 @@ input:focus {
   background: transparent;
   color: var(--accent);
   font-size: 15px;
-  font-weight: 900;
+  font-weight: 700;
   box-shadow: none;
 }
 
@@ -848,6 +880,41 @@ input:focus {
     0 20px 34px rgba(244, 193, 93, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.92);
   transform: translateY(-2px);
+}
+
+.rank-item:first-child::before {
+  content: "";
+  position: absolute;
+  inset: -32px auto -32px -58px;
+  z-index: 0;
+  width: 34px;
+  transform: rotate(24deg);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.62), transparent);
+  animation: bling-sweep 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.rank-item:first-child::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+  top: 16px;
+  z-index: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff8ce;
+  box-shadow:
+    -38px 34px 0 rgba(255, 248, 206, 0.78),
+    -18px -3px 0 rgba(255, 255, 255, 0.9),
+    18px 24px 0 rgba(255, 232, 133, 0.64);
+  animation: bling-dot 1.9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.rank-item:first-child > * {
+  position: relative;
+  z-index: 1;
 }
 
 .rank-item:first-child.own-rank {
@@ -1092,6 +1159,36 @@ input:focus {
   }
 }
 
+@keyframes bling-sweep {
+  0%,
+  52% {
+    opacity: 0;
+    translate: 0 0;
+  }
+
+  64% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+    translate: 220px 0;
+  }
+}
+
+@keyframes bling-dot {
+  0%,
+  100% {
+    opacity: 0.48;
+    transform: scale(0.82);
+  }
+
+  46% {
+    opacity: 1;
+    transform: scale(1.22);
+  }
+}
+
 .record-content {
   position: relative;
   z-index: 2;
@@ -1308,7 +1405,7 @@ input:focus {
   margin: -4px 0 0;
   color: var(--muted);
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 500;
   text-align: center;
 }
 
@@ -2215,7 +2312,7 @@ input:focus {
 }
 
 .tabbar-main {
-  transform: translateY(-10px);
+  transform: translateY(-5px);
   gap: 0;
 }
 
@@ -2265,11 +2362,21 @@ input:focus {
 }
 
 .icon-stats::before {
-  width: 4px;
-  height: 15px;
-  border-radius: 999px;
-  background: currentColor;
-  box-shadow: -8px 5px 0 currentColor, 8px -4px 0 currentColor;
+  width: 18px;
+  height: 14px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  border-radius: 0 0 0 3px;
+  transform: translate(-50%, -42%);
+}
+
+.icon-stats::after {
+  width: 17px;
+  height: 11px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  border-radius: 0 8px 0 0;
+  transform: translate(-44%, -44%) rotate(-20deg) skewX(-14deg);
 }
 
 .icon-plus::before,
@@ -2285,17 +2392,22 @@ input:focus {
 }
 
 .icon-rank::before {
-  width: 17px;
-  height: 17px;
+  width: 18px;
+  height: 13px;
+  border-radius: 3px 3px 5px 5px;
   border: 2px solid currentColor;
-  border-radius: 50%;
+  border-top: 0;
+  transform: translate(-50%, -22%);
 }
 
 .icon-rank::after {
   width: 14px;
-  height: 2px;
+  height: 12px;
+  border-radius: 2px;
   background: currentColor;
-  transform: translate(-18%, 300%) rotate(45deg);
+  box-shadow: -7px 4px 0 -2px currentColor, 7px 4px 0 -2px currentColor;
+  clip-path: polygon(0 0, 100% 0, 82% 100%, 50% 72%, 18% 100%);
+  transform: translate(-50%, -86%);
 }
 
 .icon-user::before {
@@ -2313,6 +2425,58 @@ input:focus {
   border-radius: 12px 12px 4px 4px;
   border-bottom: 0;
   transform: translate(-50%, 35%);
+}
+
+.brand p,
+.hero-card p,
+.hero-card span,
+.record-meta,
+.rank-meta,
+.profile-card p,
+.avatar-editor-tip,
+.modal-card p,
+.desktop-panel p:not(.eyebrow) {
+  font-weight: 400;
+}
+
+.eyebrow,
+label,
+.message,
+.stat span,
+.insight-grid span,
+.profile-card span,
+.home-rank-medal span,
+.tabbar-item,
+.rank-tab,
+.record-actions button,
+.modal-card label {
+  font-weight: 500;
+}
+
+.tab,
+.ghost,
+.primary,
+.panel-heading h2,
+.record-title,
+.rank-name,
+.rank-badge,
+.profile-edit-button,
+.unit-button,
+.logout-button,
+.secondary-button,
+.danger-button,
+.modal-card button {
+  font-weight: 700;
+}
+
+.hero-card strong,
+.stat strong,
+.record-weight,
+.rank-score,
+.profile-card strong,
+.rank-num,
+.app-header h1 {
+  font-weight: 800;
 }
 
 @media (min-width: 980px) {
@@ -2626,7 +2790,11 @@ input:focus {
   .modal,
   .modal.is-closing,
   .modal-card,
-  .modal.is-closing .modal-card {
+  .modal.is-closing .modal-card,
+  .home-rank-medal .rank-1::before,
+  .home-rank-medal .rank-1::after,
+  .rank-item:first-child::before,
+  .rank-item:first-child::after {
     animation: none;
   }
 }
