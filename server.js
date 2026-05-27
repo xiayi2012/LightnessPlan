@@ -313,6 +313,8 @@ function maskLeaderboardItem(item, currentUserId) {
     user: item.user,
     date: item.date,
     latestDate: item.latestDate,
+    percent: item.percent,
+    totalPercent: item.totalPercent,
     hidden: true,
     own: false
   };

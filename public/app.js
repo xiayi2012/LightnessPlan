@@ -4,6 +4,7 @@ const state = {
   records: [],
   community: [],
   leaderboard: [],
+  totalLeaderboard: [],
   competition: null,
   unit: localStorage.getItem("weightUnit") === "kg" ? "kg" : "jin"
 };
@@ -574,6 +575,7 @@ function renderLeaderboard() {
   $("#leaderboard").innerHTML = state.leaderboard.length
     ? state.leaderboard.map((item, index) => {
       const badge = rankBadge(item, index);
+      const percent = rankPercent(item);
       return `
         <article class="rank-item ${item.own ? "own-rank" : ""}">
           <div class="rank-num">${index + 1}</div>
@@ -581,6 +583,7 @@ function renderLeaderboard() {
           <div>
             <div class="rank-name">${escapeHtml(item.user.name)}${badge ? `<span class="rank-badge badge-${Math.min(index + 1, 4)}">${badge}</span>` : ""}</div>
           </div>
+          <div class="rank-score">${percent}</div>
         </article>
       `;
     }).join("")
@@ -614,6 +617,14 @@ function rankBadge(item, index) {
   if (index === 1) return "千年老二";
   if (index === 2) return "小菜鸡";
   return "拉完了";
+}
+
+function rankPercent(item) {
+  const value = rankMode === "dailyPercent" ? item.percent : item.totalPercent;
+  const number = Number(value);
+  if (!Number.isFinite(number)) return "--";
+  const arrow = number > 0 ? "↓" : number < 0 ? "↑" : "→";
+  return `${arrow} ${Math.abs(number).toFixed(2)}%`;
 }
 
 function renderCompetition() {
@@ -653,11 +664,16 @@ function renderCompetition() {
 function renderHomeRankBadge() {
   const badge = $("#homeRankBadge");
   if (!badge) return;
-  const ownIndex = state.leaderboard.findIndex((item) => item.own);
-  const rank = ownIndex >= 0 ? ownIndex + 1 : null;
-  const rankClass = rank === 1 ? "rank-1" : rank === 2 ? "rank-2" : rank === 3 ? "rank-3" : rank ? "rank-other" : "rank-none";
+  const todayIndex = state.leaderboard.findIndex((item) => item.own);
+  const totalIndex = state.totalLeaderboard.findIndex((item) => item.own);
+  const todayRank = todayIndex >= 0 ? todayIndex + 1 : null;
+  const totalRank = totalIndex >= 0 ? totalIndex + 1 : null;
+  const rankClass = todayRank === 1 ? "rank-1" : todayRank === 2 ? "rank-2" : todayRank === 3 ? "rank-3" : todayRank ? "rank-other" : "rank-none";
   badge.className = `home-rank-medal ${rankClass}`;
-  badge.innerHTML = `<span>今日</span><strong>${rank ? `第${rank}名` : "--"}</strong>`;
+  badge.innerHTML = `
+    <div><span>今日</span><strong>${todayRank ? `第${todayRank}名` : "--"}</strong></div>
+    <div><span>总榜</span><strong>${totalRank ? `第${totalRank}名` : "--"}</strong></div>
+  `;
 }
 
 function renderCompetitionSettings() {
@@ -863,16 +879,18 @@ function escapeHtml(value) {
 }
 
 async function refreshAll() {
-  const [me, records, leaderboard] = await Promise.all([
+  const [me, records, leaderboard, totalLeaderboard] = await Promise.all([
     api("/api/me"),
     api("/api/records"),
-    fetchLeaderboard()
+    fetchLeaderboard(),
+    fetchLeaderboard(today, "totalLoss")
   ]);
   state.user = me.user;
   state.stats = me.stats;
   state.records = records.mine;
   state.community = records.community;
   state.leaderboard = leaderboard.leaderboard;
+  state.totalLeaderboard = totalLeaderboard.leaderboard;
   state.competition = leaderboard.competition;
   renderShell();
   renderRecords();
@@ -960,6 +978,7 @@ document.querySelectorAll("[data-unit]").forEach((button) => {
     renderShell();
     renderRecords();
     renderLeaderboard();
+    renderHomeRankBadge();
   });
 });
 
