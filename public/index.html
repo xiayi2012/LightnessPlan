@@ -79,30 +79,31 @@
           </section>
 
           <section class="home-race-card">
-            <div>
+            <div class="home-rank-content">
               <span>今日排名</span>
               <strong id="homeRankText">--</strong>
-            </div>
-            <div>
-              <span>请客候选</span>
-              <strong id="homeTreatCandidate">--</strong>
+              <p id="homeRankHint">打卡后参与今日 PK</p>
             </div>
           </section>
 
           <section class="stats-grid" aria-label="个人概览">
             <article class="stat">
+              <span class="ui-icon icon-scale" aria-hidden="true"></span>
               <span>当前体重</span>
               <strong id="latestWeight">--</strong>
             </article>
             <article class="stat">
+              <span class="ui-icon icon-down" aria-hidden="true"></span>
               <span>累计减重</span>
               <strong id="totalLoss">--</strong>
             </article>
             <article class="stat">
+              <span class="ui-icon icon-target" aria-hidden="true"></span>
               <span>目标体重</span>
               <strong id="targetWeight">--</strong>
             </article>
             <article class="stat">
+              <span class="ui-icon icon-calendar" aria-hidden="true"></span>
               <span>记录天数</span>
               <strong id="recordDays">--</strong>
             </article>
@@ -110,7 +111,7 @@
 
           <section class="panel">
             <div class="panel-heading">
-              <h2>体重记录</h2>
+              <h2><span class="heading-icon icon-list" aria-hidden="true"></span>体重记录</h2>
             </div>
             <div id="homeRecentRecords" class="record-list"></div>
           </section>
@@ -119,7 +120,7 @@
         <section class="app-page" data-page="stats">
           <section class="panel">
             <div class="panel-heading">
-              <h2>数据统计</h2>
+              <h2><span class="heading-icon icon-pulse" aria-hidden="true"></span>数据统计</h2>
             </div>
             <div class="insight-grid">
               <article>
@@ -135,10 +136,6 @@
                 <strong id="avgChange">--</strong>
               </article>
               <article>
-                <span>最佳单日</span>
-                <strong id="bestDay">--</strong>
-              </article>
-              <article>
                 <span>预计达标</span>
                 <strong id="goalPrediction">--</strong>
               </article>
@@ -147,7 +144,7 @@
 
           <section class="panel">
             <div class="panel-heading">
-              <h2>体重趋势</h2>
+              <h2><span class="heading-icon icon-trend" aria-hidden="true"></span>体重趋势</h2>
             </div>
             <div class="chart-tabs" aria-label="图表">
               <section>
@@ -159,7 +156,7 @@
 
           <section class="panel">
             <div class="panel-heading">
-              <h2>全部体重记录</h2>
+              <h2><span class="heading-icon icon-list" aria-hidden="true"></span>全部体重记录</h2>
             </div>
             <div id="statsAllRecords" class="record-list"></div>
           </section>
@@ -209,7 +206,6 @@
           <section class="panel leaderboard-panel">
             <div class="panel-heading">
               <h2>排行榜</h2>
-              <button id="exportRankReportBtn" class="secondary-button export-report-button" type="button">导出报告</button>
             </div>
             <div class="rank-tabs" role="tablist" aria-label="排行榜排序">
               <button class="rank-tab" type="button" data-rank-mode="dailyPercent">今日排行</button>
@@ -220,7 +216,7 @@
 
           <section class="panel">
             <div class="panel-heading">
-              <h2>比赛历史</h2>
+              <h2><span class="heading-icon icon-clock" aria-hidden="true"></span>比赛历史</h2>
             </div>
             <div id="competitionHistory" class="history-list"></div>
           </section>
@@ -241,27 +237,35 @@
 
           <section class="panel option-panel">
             <div class="option-row unit-row">
-              <span>体重单位</span>
+              <span><span class="setting-icon icon-unit" aria-hidden="true"></span>体重单位</span>
               <div class="unit-toggle" role="group" aria-label="体重单位">
                 <button type="button" class="unit-button" data-unit="kg">kg</button>
                 <button type="button" class="unit-button active" data-unit="jin">斤</button>
               </div>
             </div>
             <button type="button" class="option-row" data-profile-action="competition">
-              <span>比赛设置</span>
+              <span><span class="setting-icon icon-flag" aria-hidden="true"></span>比赛设置</span>
               <b>›</b>
             </button>
             <button type="button" class="option-row" data-profile-action="target">
-              <span>目标设置</span>
+              <span><span class="setting-icon icon-target" aria-hidden="true"></span>目标设置</span>
+              <b>›</b>
+            </button>
+            <button type="button" class="option-row" data-profile-action="password">
+              <span><span class="setting-icon icon-lock" aria-hidden="true"></span>修改密码</span>
               <b>›</b>
             </button>
             <input id="recordsImportInput" type="file" accept=".json,.csv,text/csv,application/json" hidden />
             <button type="button" class="option-row" data-profile-action="backup">
-              <span>数据与备份</span>
+              <span><span class="setting-icon icon-backup" aria-hidden="true"></span>数据与备份</span>
+              <b>›</b>
+            </button>
+            <button type="button" class="option-row" data-profile-action="rankReport">
+              <span><span class="setting-icon icon-export" aria-hidden="true"></span>导出排行报告</span>
               <b>›</b>
             </button>
             <button type="button" class="option-row" data-profile-action="rules">
-              <span>比赛说明</span>
+              <span><span class="setting-icon icon-info" aria-hidden="true"></span>比赛说明</span>
               <b>›</b>
             </button>
           </section>
@@ -280,6 +284,21 @@
               <label>比赛天数<input id="competitionDurationDays" name="durationDays" type="number" min="1" max="365" step="1" required /></label>
               <button class="primary" type="submit">保存比赛设置</button>
               <p id="competitionMessage" class="message"></p>
+            </form>
+          </section>
+        </section>
+
+        <section class="app-page" data-page="passwordSettings">
+          <section class="panel competition-settings">
+            <div class="panel-heading page-heading">
+              <button id="backPasswordProfileBtn" class="back-button" type="button" aria-label="返回">‹</button>
+              <h2>修改密码</h2>
+            </div>
+            <form id="passwordForm" class="settings-form">
+              <label>旧密码<input id="passwordCurrentInput" type="password" autocomplete="current-password" required /></label>
+              <label>新密码<input id="passwordNewInput" type="password" autocomplete="new-password" minlength="6" required /></label>
+              <button class="primary" type="submit">保存新密码</button>
+              <p id="passwordMessage" class="message"></p>
             </form>
           </section>
         </section>
@@ -329,6 +348,18 @@
         </div>
       </section>
 
+      <section id="logoutConfirmModal" class="modal hidden" aria-modal="true" role="dialog">
+        <div class="modal-card confirm-card">
+          <span class="confirm-icon">!</span>
+          <h2>确认注销登录？</h2>
+          <p>注销后会回到登录页面，本地账号数据不会被删除。</p>
+          <div class="confirm-actions">
+            <button id="cancelLogoutBtn" class="secondary-button" type="button">取消</button>
+            <button id="confirmLogoutBtn" class="danger-button" type="button">注销</button>
+          </div>
+        </div>
+      </section>
+
       <section id="recordDetailModal" class="modal hidden" aria-modal="true" role="dialog">
         <div class="modal-card record-detail-card">
           <h2>记录详情</h2>
@@ -359,8 +390,6 @@
           <label>账号<input id="profileAccountInput" disabled /></label>
           <label>昵称<input id="profileNameInput" maxlength="24" /></label>
           <label>出生日期<input id="profileBirthdayInput" type="date" /></label>
-          <label>旧密码<input id="profileCurrentPasswordInput" type="password" autocomplete="current-password" placeholder="修改密码时必填" /></label>
-          <label>修改密码<input id="profilePasswordInput" type="password" autocomplete="new-password" minlength="6" placeholder="不修改可留空" /></label>
           <button id="saveProfileBtn" class="primary" type="button">保存</button>
           <p id="profileEditMessage" class="message"></p>
         </div>

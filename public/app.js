@@ -42,7 +42,8 @@ const pageMeta = {
   checkin: ["每日打卡", "体重打卡"],
   rank: ["好友 PK", "排行榜"],
   profile: ["个人中心", "我的"],
-  competitionSettings: ["比赛设置", "比赛设置"]
+  competitionSettings: ["比赛设置", "比赛设置"],
+  passwordSettings: ["账号安全", "修改密码"]
 };
 
 recordDate.value = today;
@@ -195,8 +196,6 @@ function openProfileEdit() {
   $("#profileAccountInput").value = state.user?.account || "";
   $("#profileNameInput").value = state.user?.name || "";
   $("#profileBirthdayInput").value = state.user?.birthday || "";
-  $("#profileCurrentPasswordInput").value = "";
-  $("#profilePasswordInput").value = "";
   $("#profileEditMessage").textContent = "";
   openModal("#profileEditModal");
 }
@@ -544,7 +543,7 @@ async function saveRecordDetail() {
       await api(`/api/records/${encodeURIComponent(originalRecord.id)}`, { method: "DELETE" });
     }
     closeRecordDetail();
-    await refreshAll();
+    await refreshAfterRecordChange();
   } catch (error) {
     message.textContent = error.message;
   }
@@ -632,17 +631,29 @@ function renderCompetition() {
   $("#winnerScore").textContent = competition.winner
     ? competition.isFinished
       ? `${Number(competition.winner.totalPercent || 0).toFixed(2)}% · ${signedKg(competition.winner.totalLoss)}`
-      : "比赛结束后公开数值"
+      : ""
     : "--";
   $("#loserName").textContent = competition.loser?.user?.name || "--";
   $("#loserScore").textContent = competition.loser
     ? competition.isFinished
       ? `${Number(competition.loser.totalPercent || 0).toFixed(2)}% · ${signedKg(competition.loser.totalLoss)}`
-      : "比赛结束后公开数值"
+      : ""
     : "--";
-  $("#homeTreatCandidate").textContent = competition.loser?.user?.name || "--";
   const ownIndex = state.leaderboard.findIndex((item) => item.own);
+  const ownRank = ownIndex >= 0 ? ownIndex + 1 : null;
   $("#homeRankText").textContent = ownIndex >= 0 ? `第 ${ownIndex + 1} 名` : "--";
+  const rankHint = $("#homeRankHint");
+  if (rankHint) {
+    if (!ownRank) {
+      rankHint.textContent = "今天打卡后加入排行榜";
+    } else if (ownRank === 1) {
+      rankHint.textContent = "今天暂时领先，稳住这个节奏";
+    } else if (ownRank <= 3) {
+      rankHint.textContent = "距离榜首很近，再坚持一下";
+    } else {
+      rankHint.textContent = "继续打卡，排名会更好看";
+    }
+  }
   const treatButton = $("#treatDoneBtn");
   if (treatButton) {
     treatButton.classList.toggle("hidden", !competition.isFinished || !competition.loser);
@@ -673,18 +684,28 @@ function rankScore(item) {
   return `${kg(item.weight)}<br><span>${Number(item.totalPercent ?? 0).toFixed(2)}%</span>`;
 }
 
-function exportRankReport() {
-  if (!state.leaderboard.length) {
+async function exportRankReport() {
+  const [daily, total] = await Promise.all([
+    api(`/api/leaderboard?date=${encodeURIComponent(today)}&mode=dailyPercent`),
+    api(`/api/leaderboard?date=${encodeURIComponent(today)}&mode=totalLoss`)
+  ]);
+  const dailyList = daily.leaderboard || [];
+  const totalList = total.leaderboard || [];
+  if (!dailyList.length && !totalList.length) {
     alert("暂无可导出的排行数据");
     return;
   }
-  const modeText = rankMode === "totalLoss" ? "总排行" : "今日排行";
+  const rankLines = (title, list) => [
+    title,
+    ...(list.length ? list.map((item, index) => `第${index + 1}名：${item.user?.name || "未命名成员"}`) : ["暂无排行"])
+  ];
   const lines = [
     "轻盈计划减肥排行报告",
-    `排行类型：${modeText}`,
     `生成时间：${new Date().toLocaleString("zh-CN")}`,
     "",
-    ...state.leaderboard.map((item, index) => `第${index + 1}名：${item.user?.name || "未命名成员"}`),
+    ...rankLines("今日排行", dailyList),
+    "",
+    ...rankLines("总排行", totalList),
     "",
     "说明：本报告仅包含排行名次和成员名称，不包含具体体重、减重数或减重比例。"
   ];
@@ -692,7 +713,7 @@ function exportRankReport() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `轻盈计划-${modeText}报告-${today}.txt`;
+  link.download = `轻盈计划-排行报告-${today}.txt`;
   document.body.appendChild(link);
   link.click();
   link.remove();
@@ -784,13 +805,10 @@ function renderStats() {
   renderCharts(records);
   const first = records[0];
   const latest = records[records.length - 1];
-  const dayDiffs = records.slice(1).map((record, index) => Number((records[index].weight - record.weight).toFixed(1)));
-  const best = dayDiffs.length ? Math.max(...dayDiffs) : 0;
   const average = records.length > 1 ? Number((state.stats.totalLoss / (records.length - 1)).toFixed(1)) : 0;
   $("#firstWeight").textContent = kg(first?.weight);
   $("#distanceToGoal").textContent = latest ? kg(Math.abs(latest.weight - state.user.targetWeight)) : "--";
   $("#avgChange").textContent = signedKg(average);
-  $("#bestDay").textContent = signedKg(best);
   $("#goalPrediction").textContent = predictGoalDate(records);
 }
 
@@ -883,8 +901,18 @@ async function refreshAll() {
   renderLeaderboard();
 }
 
-function fetchLeaderboard() {
-  return api(`/api/leaderboard?date=${encodeURIComponent(rankDate?.value || today)}&mode=${encodeURIComponent(rankMode)}`);
+async function refreshAfterRecordChange() {
+  if (rankDate) rankDate.value = today;
+  await refreshAll();
+}
+
+function fetchLeaderboard(date = today, mode = rankMode) {
+  const params = new URLSearchParams({
+    date,
+    mode,
+    _: String(Date.now())
+  });
+  return api(`/api/leaderboard?${params.toString()}`);
 }
 
 document.querySelectorAll("[data-auth-tab]").forEach((button) => {
@@ -1074,9 +1102,8 @@ $("#recordForm").addEventListener("submit", async (event) => {
     await api("/api/records", { method: "POST", body: JSON.stringify(payload) });
     const wasEditing = Boolean(editingRecordId);
     recordMessage.textContent = wasEditing ? "已修改。" : "已保存，排行榜刷新了。";
-    if (rankDate) rankDate.value = recordDate.value;
     resetRecordForm();
-    await refreshAll();
+    await refreshAfterRecordChange();
     switchPage(wasEditing ? (previousPageBeforeCheckin || "home") : "rank");
   } catch (error) {
     recordMessage.textContent = error.message;
@@ -1092,8 +1119,6 @@ rankDate?.addEventListener("change", async () => {
   state.competition = data.competition;
   renderLeaderboard();
 });
-
-$("#exportRankReportBtn")?.addEventListener("click", exportRankReport);
 
 $("#competitionForm").addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -1116,7 +1141,14 @@ $("#treatDoneBtn")?.addEventListener("click", async () => {
   renderCompetition();
 });
 
-$("#logoutBtn").addEventListener("click", async () => {
+$("#logoutBtn").addEventListener("click", () => openModal("#logoutConfirmModal"));
+
+$("#cancelLogoutBtn").addEventListener("click", () => closeModal("#logoutConfirmModal"));
+$("#logoutConfirmModal").addEventListener("click", (event) => {
+  if (event.target.id === "logoutConfirmModal") closeModal("#logoutConfirmModal");
+});
+$("#confirmLogoutBtn").addEventListener("click", async () => {
+  closeModal("#logoutConfirmModal");
   await api("/api/logout", { method: "POST", body: "{}" });
   state.user = null;
   state.stats = null;
@@ -1140,12 +1172,15 @@ document.querySelectorAll("[data-profile-action]").forEach((button) => {
     if (button.dataset.profileAction === "profile") openProfileEdit();
     if (button.dataset.profileAction === "competition") switchPage("competitionSettings");
     if (button.dataset.profileAction === "target") openTargetSettings();
+    if (button.dataset.profileAction === "password") switchPage("passwordSettings");
     if (button.dataset.profileAction === "rules") openModal("#rulesModal");
     if (button.dataset.profileAction === "backup") openModal("#backupModal");
+    if (button.dataset.profileAction === "rankReport") exportRankReport().catch((error) => alert(error.message));
   });
 });
 
 $("#backProfileBtn").addEventListener("click", () => switchPage("profile"));
+$("#backPasswordProfileBtn").addEventListener("click", () => switchPage("profile"));
 
 $("#cancelDeleteBtn").addEventListener("click", closeDeleteModal);
 $("#deleteModal").addEventListener("click", (event) => {
@@ -1158,7 +1193,7 @@ $("#confirmDeleteBtn").addEventListener("click", async () => {
   closeDeleteModal();
   await api(`/api/records/${encodeURIComponent(recordId)}`, { method: "DELETE" });
   closeOpenSwipeRecords();
-  await refreshAll();
+  await refreshAfterRecordChange();
 });
 
 $("#closeRecordDetailBtn").addEventListener("click", closeRecordDetail);
@@ -1179,11 +1214,6 @@ $("#saveProfileBtn").addEventListener("click", async () => {
       name: $("#profileNameInput").value,
       birthday: $("#profileBirthdayInput").value
     };
-    const password = $("#profilePasswordInput").value;
-    if (password) {
-      payload.currentPassword = $("#profileCurrentPasswordInput").value;
-      payload.password = password;
-    }
     const data = await api("/api/me", { method: "PATCH", body: JSON.stringify(payload) });
     if (payload.birthday && data.user?.birthday !== payload.birthday) {
       throw new Error("出生日期未保存成功，请确认正式服务器已更新并重启。");
@@ -1194,6 +1224,23 @@ $("#saveProfileBtn").addEventListener("click", async () => {
     renderShell();
     renderRecords();
     renderLeaderboard();
+  } catch (error) {
+    message.textContent = error.message;
+  }
+});
+
+$("#passwordForm")?.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const message = $("#passwordMessage");
+  message.textContent = "";
+  try {
+    const payload = {
+      currentPassword: $("#passwordCurrentInput").value,
+      password: $("#passwordNewInput").value
+    };
+    await api("/api/me", { method: "PATCH", body: JSON.stringify(payload) });
+    $("#passwordForm").reset();
+    message.textContent = "密码已修改。";
   } catch (error) {
     message.textContent = error.message;
   }
